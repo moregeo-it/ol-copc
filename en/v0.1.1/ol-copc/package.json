@@ -1,0 +1,41 @@
+{
+  "name": "ol-copc",
+  "version": "0.1.1",
+  "description": "Cloud Optimized Point Clouds (COPC) for OpenLayers, top-down or in a tilted view",
+  "homepage": "https://moregeo.it",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/moregeo-it/ol-copc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moregeo-it/ol-copc/issues"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/m-mohr"
+  },
+  "dependencies": {
+    "copc": "^0.0.9"
+  },
+  "peerDependencies": {
+    "ol": ">=9.0.0",
+    "proj4": "^2.16.1"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "keywords": [
+    "openlayers",
+    "copc",
+    "point cloud",
+    "lidar",
+    "las",
+    "laz",
+    "webgl"
+  ]
+}
