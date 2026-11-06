@@ -1,0 +1,6 @@
+/build/
+/coverage/
+/dist/
+node_modules/
+.vitest-attachments/
+__screenshots__/
