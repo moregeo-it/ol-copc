@@ -71,6 +71,7 @@ export class COPCSourceEvent extends BaseEvent {
  * @property {number} top The elevation of the highest objects without outliers (99.5th percentile).
  * @property {number} intensity The highest intensity without outliers (99th percentile).
  * @property {number} colorScale The factor to scale the colors to 16 bits.
+ * @property {boolean} colors Whether the colors are filled, i.e. not all black.
  */
 
 export const ROOT = '0-0-0-0';
@@ -275,13 +276,15 @@ class COPCSource extends Source {
   }
 
   /**
+   * Colors that are all black (e.g. not filled) count as no colors once the root node is loaded.
    * @return {boolean} Whether the points have colors.
    * @api
    */
   hasColors() {
     return (
       this.copc_ !== null &&
-      [2, 3, 5, 7, 8, 10].includes(this.copc_.header.pointDataRecordFormat)
+      [2, 3, 5, 7, 8, 10].includes(this.copc_.header.pointDataRecordFormat) &&
+      this.statistics_?.colors !== false
     );
   }
 
@@ -410,6 +413,7 @@ class COPCSource extends Source {
    */
   updateStatistics_(data) {
     let colorScale = 1;
+    let colors = false;
     if (data.rgb) {
       let max = 0;
       for (let i = 0; i < data.rgb.length; i++) {
@@ -417,12 +421,14 @@ class COPCSource extends Source {
       }
       // 8-bit colors stored in 16 bits
       colorScale = max <= 255 ? 257 : 1;
+      colors = max > 0;
     }
     this.statistics_ = {
       ground: getQuantile(data.z, 0.1),
       top: getQuantile(data.z, 0.995),
       intensity: getQuantile(data.intensity, 0.99),
       colorScale,
+      colors,
     };
     this.changed();
   }
