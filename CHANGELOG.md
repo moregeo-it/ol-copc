@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Detect the horizontal reference system in compound WKT definitions whose names contain brackets
+
 ## [0.1.2] - 2026-11-07
 
 ### Fixed

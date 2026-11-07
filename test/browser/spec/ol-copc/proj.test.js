@@ -43,6 +43,20 @@ describe('ol/proj', function () {
       expect(getHorizontalWkt(wkt)).to.equal(horizontal);
     });
 
+    it('ignores brackets and keywords in quoted strings', function () {
+      const horizontal =
+        'PROJCS["Local grid in (0, 1000000] metres",GEOGCS["WGS 84"]]';
+      const wkt = `COMPD_CS["GEOGCS[ ""quoted"" + height",${horizontal},VERT_CS["height"]]`;
+      expect(getHorizontalWkt(wkt)).to.equal(horizontal);
+    });
+
+    it('supports parentheses as delimiters', function () {
+      const horizontal =
+        'PROJCRS("WGS 84 / UTM zone 32N",BASEGEOGCRS("WGS 84",DATUM("World Geodetic System 1984")))';
+      const wkt = `COMPOUNDCRS("WGS 84 / UTM zone 32N + EGM96 height",${horizontal},VERTCRS("EGM96 height"))`;
+      expect(getHorizontalWkt(wkt)).to.equal(horizontal);
+    });
+
     it('keeps other reference systems', function () {
       expect(getHorizontalWkt(` ${WKT_25832} `)).to.equal(WKT_25832);
     });

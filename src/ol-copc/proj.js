@@ -13,24 +13,35 @@ import proj4 from 'proj4';
  */
 export function getHorizontalWkt(wkt) {
   wkt = wkt.trim();
-  if (!/^(COMPD_CS|COMPOUNDCRS)\s*\[/i.test(wkt)) {
+  // WKT allows parentheses instead of brackets as delimiters
+  if (!/^(COMPD_CS|COMPOUNDCRS)\s*[[(]/i.test(wkt)) {
     return wkt;
   }
-  // Not within other keywords such as BASEGEOGCRS
-  const match =
-    /(?<![A-Z_])(PROJCS|PROJCRS|PROJECTEDCRS|GEOGCS|GEOGCRS|GEOGRAPHICCRS|GEODCRS|GEODETICCRS)\s*\[/i.exec(
-      wkt.substring(1),
-    );
-  if (!match) {
-    return wkt;
-  }
-  const start = match.index + 1;
+  const keyword =
+    /(?<![A-Z_])(PROJCS|PROJCRS|PROJECTEDCRS|GEOGCS|GEOGCRS|GEOGRAPHICCRS|GEODCRS|GEODETICCRS)\s*[[(]/iy;
+  let quoted = false;
   let depth = 0;
-  for (let i = start; i < wkt.length; i++) {
-    if (wkt[i] === '[') {
+  let start = -1;
+  for (let i = 0; i < wkt.length; i++) {
+    const char = wkt[i];
+    // Quotes within strings are doubled, which toggles twice
+    if (char === '"') {
+      quoted = !quoted;
+    } else if (quoted) {
+      continue;
+    } else if (char === '[' || char === '(') {
       depth++;
-    } else if (wkt[i] === ']' && --depth === 0) {
-      return wkt.substring(start, i + 1);
+    } else if (char === ']' || char === ')') {
+      depth--;
+      if (start !== -1 && depth === 1) {
+        return wkt.substring(start, i + 1);
+      }
+    } else if (start === -1 && depth === 1) {
+      // Only the components of the compound reference system
+      keyword.lastIndex = i;
+      if (keyword.test(wkt)) {
+        start = i;
+      }
     }
   }
   return wkt;
