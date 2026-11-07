@@ -62,7 +62,7 @@ var Retries = class {
 function getHorizontalWkt(wkt) {
 	wkt = wkt.trim();
 	if (!/^(COMPD_CS|COMPOUNDCRS)\s*\[/i.test(wkt)) return wkt;
-	const match = /(PROJCS|PROJCRS|GEOGCS|GEOGCRS|GEODCRS)\s*\[/i.exec(wkt.substring(1));
+	const match = /(?<![A-Z_])(PROJCS|PROJCRS|PROJECTEDCRS|GEOGCS|GEOGCRS|GEOGRAPHICCRS|GEODCRS|GEODETICCRS)\s*\[/i.exec(wkt.substring(1));
 	if (!match) return wkt;
 	const start = match.index + 1;
 	let depth = 0;

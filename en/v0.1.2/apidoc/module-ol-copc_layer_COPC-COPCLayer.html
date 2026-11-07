@@ -1,0 +1,2622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>OL COPC v0.1.2 API - Class: COPCLayer</title>
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.2/css/fontawesome.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.2/css/solid.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.2/css/brands.css" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="styles/prettify-tomorrow.css">
+    <link rel="stylesheet" type="text/css" href="styles/jaguar.css">
+    <link rel="stylesheet" type="text/css" href="styles/carbon.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/ol/ol.css">
+    <link rel="stylesheet" type="text/css" href="/theme/site.css">
+  </head>
+  <body>
+    <header class="navbar navbar-expand-sm navbar-dark mb-3 px-3 py-0 fixed-top" role="navigation">
+      <a class="navbar-brand" href="/">OL COPC</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#olmenu" aria-controls="olmenu" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- menu items that get hidden below 768px width -->
+      <nav class="collapse navbar-collapse" id="olmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="docdropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Docs</a>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="docdropdown">
+              <a class="dropdown-item" href="/doc/">Docs</a>
+              <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="/doc/quickstart.html"><i class="fa fa-check fa-fw me-2 fa-lg"></i>Quick Start</a>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="../examples/"><i class="fa fa-map me-1"></i>Examples</a></li>
+          <li class="nav-item active"><a class="nav-link" href="../apidoc/"><i class="fa fa-code me-1"></i>API</a></li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="codedropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Code</a>
+            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="codedropdown">
+              <a class="dropdown-item" href="https://github.com/moregeo-it/ol-copc"><i class="fab fa-github fa-fw me-2 fa-lg"></i>Repository</a>
+              <a class="dropdown-item" href="/download/"><i class="fa fa-download fa-fw me-2 fa-lg"></i>Download</a>
+            </div>
+          </li>
+        </ul>
+      </nav>
+    </header>
+
+    <div class="container-fluid">
+      <div id="wrap" class="row">
+        <div class="navigation col-md-4 col-lg-3">
+          <div class="search-wrapper">
+            <div class="search">
+              <input id="search" type="text" autocomplete="off" class="form-control input-sm" placeholder="Search Documentation">
+            </div>
+          </div>
+          <div class="navigation-list-wrapper">
+            <ul class="navigation-list search-empty">
+<li class="item item-class toggle-manual toggle-manual-show" data-longname="module:ol-copc/layer/COPC~COPCLayer" data-name="ol-copc/layer/copc">
+    <span class="title toggle">
+        <span class="fa fa-chevron-right me-2 mt-1"></span>
+        <span><a href="module-ol-copc_layer_COPC-COPCLayer.html">ol-copc​/layer​/COPC</a></span>
+    </span>
+    <div class="member-list" data-type="methods">
+        <span class="subtitle">Methods</span>
+        <ul>
+            <li data-name="getclasscolors"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getClassColors">getClassColors</a>
+            <li data-name="getcolormode"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getColorMode">getColorMode</a>
+            <li data-name="getcolormap"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getColormap">getColormap</a>
+            <li data-name="getedl"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getEDL">getEDL</a>
+            <li data-name="getelevationrange"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getElevationRange">getElevationRange</a>
+            <li data-name="getgroundelevation"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getGroundElevation">getGroundElevation</a>
+            <li data-name="getintensityrange"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getIntensityRange">getIntensityRange</a>
+            <li data-name="getmaxloadedpoints"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getMaxLoadedPoints">getMaxLoadedPoints</a>
+            <li data-name="getpointbudget"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getPointBudget">getPointBudget</a>
+            <li data-name="getpointsize"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getPointSize">getPointSize</a>
+            <li data-name="getshading"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getShading">getShading</a>
+            <li data-name="gettilt"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getTilt">getTilt</a>
+            <li data-name="getwalls"><a href="module-ol-copc_layer_COPC-COPCLayer.html#getWalls">getWalls</a>
+            <li data-name="setcolormode"><a href="module-ol-copc_layer_COPC-COPCLayer.html#setColorMode">setColorMode</a>
+            <li data-name="setedl"><a href="module-ol-copc_layer_COPC-COPCLayer.html#setEDL">setEDL</a>
+            <li data-name="setpointsize"><a href="module-ol-copc_layer_COPC-COPCLayer.html#setPointSize">setPointSize</a>
+            <li data-name="settilt"><a href="module-ol-copc_layer_COPC-COPCLayer.html#setTilt">setTilt</a>
+            <li data-name="setwalls"><a href="module-ol-copc_layer_COPC-COPCLayer.html#setWalls">setWalls</a>
+        </ul>
+    </div>
+              <li class="loading">Loading …
+            </ul>
+          </div>
+        </div>
+
+        <div class="main col-md-8 col-lg-9">
+          <h1 class="page-title" data-filename="module-ol-copc_layer_COPC-COPCLayer.html">Class: COPCLayer</h1>
+          <div id="latest-check" class="alert alert-warning alert-dismissible" role="alert" style="display:none">
+            <button id="latest-dismiss" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            This documentation is for OL COPC v<span id="package-version">0.1.2</span>. The <a id="latest-link" href="#" class="alert-link">latest</a> is v<span id="latest-version"></span>.
+          </div>
+          
+
+
+
+<section class="content">
+
+<header>
+    <h2 class="my-3">
+        <span class="ancestors"><a href="module-ol-copc_layer_COPC.html">ol-copc/layer/COPC</a>~</span>COPCLayer
+    </h2>
+    <br>
+    
+      
+      
+        <pre class="prettyprint source"><code>import COPCLayer from '<a href="module-ol-copc_layer_COPC.html">ol-copc/layer/COPC</a>.js';</code></pre>
+      
+    
+    <div class="row p-3 ">
+    
+      <div class="class-description col-lg-7 align-self-center ps-0"><p>A layer that renders a Cloud Optimized Point Cloud (COPC) with WebGL 2,
+top-down or in an oblique (tilted) view that follows the rotation of the map.</p></div>
+    
+    </div>
+</header>
+
+<article>
+    <div class="container-overview">
+    
+
+    
+        <dl>
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="COPCLayer">
+        </div>
+        <h4 class="name">
+            new module:ol-copc/layer/COPC~COPCLayer<span class="signature">(options)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L55">line 55</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>source</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-ol-copc_source_COPC-COPCSource.html">module:ol-copc/source/COPC~COPCSource</a></span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The COPC source.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>tilt</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 0)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The tilt of the view in degrees, up to 75.
+Points are shifted towards the top of the screen by their height above the ground (oblique view).</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>groundElevation</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The elevation that is not shifted by the tilt.
+Estimated from the point cloud by default.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>pointSize</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 2)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The size of the points in CSS pixels.
+The level of detail is chosen so that the points are about this far apart.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>pointBudget</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 3000000)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The maximum number of points to render.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>maxLoadedPoints</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 8000000)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The maximum number of points kept on the GPU.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>colorMode</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-ol-copc_layer_COPC.html#~ColorMode">module:ol-copc/layer/COPC~ColorMode</a></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>How to color the points. Defaults to <code>rgb</code> if the points have colors,
+<code>elevation</code> otherwise.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>classColors</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Object.&lt;number, (module:ol/color.js~Color|string)></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The colors per class.
+Defaults to the colors of the ASPRS standard classes.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>colormap</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;(module:ol/color.js~Color|string)></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The colors for elevations and intensities.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>elevationRange</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;number></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The [min, max] range of elevations for the colormap.
+Estimated from the point cloud by default.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>intensityRange</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Array.&lt;number></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The [min, max] range of intensities for the colormap.
+Estimated from the point cloud by default.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>edl</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 1)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The strength of the eye-dome lighting (0 disables it).</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>walls</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+                
+                    (defaults to true)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Whether to draw walls below elevated points in the oblique view.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>shading</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+                
+                    (defaults to true)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Whether points are shaded as domes.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>className</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">string</span>
+
+
+                
+                    (defaults to 'ol-layer')
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>A CSS class name to set to the layer element.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>opacity</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+                    (defaults to 1)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Opacity (0, 1).</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>visible</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+                
+                    (defaults to true)
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Visibility.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>extent</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Extent</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The bounding extent for layer rendering.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>zIndex</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The z-index for layer rendering.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>minResolution</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The minimum resolution (inclusive) at which this layer will be visible.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>maxResolution</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The maximum resolution (exclusive) below which this layer will be visible.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>minZoom</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The minimum view zoom level (exclusive) above which this layer will be visible.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>maxZoom</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The maximum view zoom level (inclusive) at which this layer will be visible.</p></td>
+        </tr>
+
+	
+
+        <tr class="">
+            
+                <td class="name"><code>properties</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">Object.&lt;string, *></span>
+
+ | undefined
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Arbitrary observable properties.</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+    </div>
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        <dl>
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getClassColors">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getClassColors<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{Object.&lt;number, (module:ol/color.js~Color|string)> | undefined}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L236">line 236</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The colors per class, if set.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getColorMode">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getColorMode<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{<a href="module-ol-copc_layer_COPC.html#~ColorMode">module:ol-copc/layer/COPC~ColorMode</a>}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L215">line 215</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+How the points are colored.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getColormap">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getColormap<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{Array.&lt;(module:ol/color.js~Color|string)> | undefined}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L244">line 244</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The colors for elevations and intensities, if set.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getEDL">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getEDL<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L268">line 268</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The strength of the eye-dome lighting.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getElevationRange">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getElevationRange<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{Array.&lt;number> | undefined}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L252">line 252</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The range of elevations for the colormap, if set.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getGroundElevation">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getGroundElevation<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number | undefined}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L174">line 174</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The elevation that is not shifted by the tilt, if set.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getIntensityRange">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getIntensityRange<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{Array.&lt;number> | undefined}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L260">line 260</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The range of intensities for the colormap, if set.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getMaxLoadedPoints">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getMaxLoadedPoints<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L207">line 207</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The maximum number of points kept on the GPU.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getPointBudget">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getPointBudget<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L199">line 199</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The maximum number of points to render.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getPointSize">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getPointSize<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L182">line 182</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The size of the points in CSS pixels.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getShading">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getShading<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{boolean}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L302">line 302</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+Whether points are shaded as domes.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getTilt">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getTilt<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{number}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L157">line 157</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+The tilt of the view in degrees.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="getWalls">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#getWalls<span class="signature">()</span><span class="fa fa-arrow-circle-right"></span><span class="type-signature returnType">{boolean}</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L285">line 285</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+
+
+<h5>Returns:</h5>
+Whether walls are drawn in the oblique view.
+<br />
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="setColorMode">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#setColorMode<span class="signature">(colorMode)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L227">line 227</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>colorMode</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type"><a href="module-ol-copc_layer_COPC.html#~ColorMode">module:ol-copc/layer/COPC~ColorMode</a></span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>How to color the points.</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="setEDL">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#setEDL<span class="signature">(edl)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L276">line 276</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>edl</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The strength of the eye-dome lighting (0 disables it).</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="setPointSize">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#setPointSize<span class="signature">(pointSize)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L190">line 190</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>pointSize</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The size of the points in CSS pixels.</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="setTilt">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#setTilt<span class="signature">(tilt)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L165">line 165</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>tilt</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">number</span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>The tilt of the view in degrees, up to 75.</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        
+            
+            
+<dt class="">
+    
+    <div class="nameContainer">
+        <div class="anchor" id="setWalls">
+        </div>
+        <h4 class="name">
+            module:ol-copc/layer/COPC~COPCLayer#setWalls<span class="signature">(walls)</span>
+            
+            
+
+        </h4>
+        
+        <div class="tag-source">
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js">layer/COPC.js</a>,
+            <a href="https://github.com/moregeo-it/ol-copc/blob/v0.1.2/src/ol-copc/layer/COPC.js#L293">line 293</a>
+        </div>
+        
+    </div>
+    
+    
+</dt>
+<dd class="">
+
+
+
+    
+
+    
+
+    
+
+    
+    
+        
+
+<table class="params">
+    <thead>
+	<tr>
+		
+		<th>Name</th>
+		
+
+		<th>Type</th>
+
+		<th class="last">Description</th>
+	</tr>
+	</thead>
+
+	<tbody>
+	
+
+        <tr class="">
+            
+                <td class="name"><code>walls</code></td>
+            
+
+            
+            <td class="type">
+            
+                
+<span class="param-type">boolean</span>
+
+
+                
+            
+            </td>
+
+            
+
+            <td  class="description last">
+                
+                <p>Whether to draw walls below elevated points in the oblique view.</p></td>
+        </tr>
+
+	
+	</tbody>
+</table>
+    
+    
+
+    
+<dl class="details">
+    
+        
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+</dl>
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+</dd>
+
+        </dl>
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+        </div>
+      </div>
+    </div>
+    <script>prettyPrint();</script>
+    <script src="scripts/linenumber.js"></script>
+    <script src="scripts/main.js"></script>
+  </body>
+</html>
