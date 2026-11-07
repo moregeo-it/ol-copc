@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Option `hideNoise` and `setHideNoise()` to hide the points classified as noise (classes 7 and 18)
+
 ### Fixed
 
 - Withheld points are no longer shown, as the LAS specification considers them deleted

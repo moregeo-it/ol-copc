@@ -24,6 +24,7 @@ describe('ol/layer/COPC', function () {
     expect(layer.getEDL()).to.equal(1);
     expect(layer.getWalls()).to.equal(true);
     expect(layer.getShading()).to.equal(true);
+    expect(layer.getHideNoise()).to.equal(false);
   });
 
   it('limits the tilt', function () {
@@ -52,10 +53,12 @@ describe('ol/layer/COPC', function () {
     layer.setPointSize(3);
     layer.setEDL(0);
     layer.setWalls(false);
+    layer.setHideNoise(true);
     expect(layer.getColorMode()).to.equal('classification');
     expect(layer.getPointSize()).to.equal(3);
     expect(layer.getEDL()).to.equal(0);
     expect(layer.getWalls()).to.equal(false);
-    expect(changes).to.equal(4);
+    expect(layer.getHideNoise()).to.equal(true);
+    expect(changes).to.equal(5);
   });
 });

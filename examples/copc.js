@@ -32,6 +32,9 @@ const edl = /** @type {HTMLInputElement} */ (document.getElementById('edl'));
 const walls = /** @type {HTMLInputElement} */ (
   document.getElementById('walls')
 );
+const noise = /** @type {HTMLInputElement} */ (
+  document.getElementById('noise')
+);
 
 const map = new Map({
   target: 'map',
@@ -64,6 +67,7 @@ function showDataset() {
     colorMode: /** @type {*} */ (colorMode),
     edl: Number(edl.value),
     walls: walls.checked,
+    hideNoise: noise.checked,
   });
   map.addLayer(pointCloud);
 
@@ -96,6 +100,7 @@ tilt.addEventListener('input', () => {
 });
 edl.addEventListener('input', () => pointCloud.setEDL(Number(edl.value)));
 walls.addEventListener('change', () => pointCloud.setWalls(walls.checked));
+noise.addEventListener('change', () => pointCloud.setHideNoise(noise.checked));
 
 const rotate = (delta) => {
   const view = map.getView();
