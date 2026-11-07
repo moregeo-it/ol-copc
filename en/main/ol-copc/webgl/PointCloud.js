@@ -21,8 +21,15 @@ uniform vec2 u_valueRange;
 uniform float u_colorScale;
 uniform sampler2D u_classes;
 uniform sampler2D u_ramp;
+uniform bool u_hideNoise;
 out vec3 v_color;
 void main() {
+  // Low and high noise (ASPRS classes 7 and 18) are moved out of the clip space
+  if (u_hideNoise && (a_class == 7.0 || a_class == 18.0)) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    gl_PointSize = 0.0;
+    return;
+  }
   vec2 clip = u_rotation * (u_offset + a_xy) * u_scale;
   // Oblique view: higher points are shifted towards the top of the screen
   clip.y += (a_z - u_ground) * u_lean;
@@ -201,6 +208,7 @@ const MAX_WALL_LENGTH = 1024;
  * @property {number} edl The strength of the eye-dome lighting (0 disables it).
  * @property {number} wallHeight The maximum height of walls in elevation units (0 disables them).
  * @property {boolean} shading Whether points are shaded as domes.
+ * @property {boolean} hideNoise Whether the points classified as noise are hidden.
  */
 /**
  * @param {WebGL2RenderingContext} gl The context.
@@ -471,6 +479,7 @@ class WebGLPointCloud {
         gl.uniform2f(u.u_valueRange, minValue, minValue + Math.max(maxValue - minValue, 1e-6));
         gl.uniform1f(u.u_colorScale, params.colorScale);
         gl.uniform1i(u.u_shading, params.shading ? 1 : 0);
+        gl.uniform1i(u.u_hideNoise, params.hideNoise ? 1 : 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.classTexture_);
         gl.uniform1i(u.u_classes, 0);

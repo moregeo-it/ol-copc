@@ -468,6 +468,7 @@ class COPCLayerRenderer extends LayerRenderer {
             edl: layer.getEDL(),
             wallHeight: layer.getWalls() ? top - min[2] : 0,
             shading: layer.getShading(),
+            hideNoise: layer.getHideNoise(),
         });
         return canvas;
     }
