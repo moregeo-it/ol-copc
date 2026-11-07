@@ -119,6 +119,14 @@ describe('ol/proj', function () {
       expect(lat).to.be.within(-0.01, 0.01);
     });
 
+    it('registers WKT with names in any script', function () {
+      const projection = registerWkt(
+        WKT_25832.replace('ETRS89 / UTM zone 32N', 'ETRS89 / UTM 32N 区域'),
+      );
+      const [lon] = transform([500000, 0], projection, 'EPSG:4326');
+      expect(lon).to.be.within(8.99, 9.01);
+    });
+
     it('returns the same projection for the same WKT', function () {
       expect(registerWkt(COMPOUND)).to.equal(registerWkt(WKT_25832));
     });

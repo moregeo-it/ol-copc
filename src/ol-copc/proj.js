@@ -89,7 +89,9 @@ export function normalizeWkt(wkt) {
  */
 export function registerWkt(wkt) {
   const horizontal = normalizeWkt(getHorizontalWkt(wkt));
-  const code = `COPC:${btoa(horizontal)}`;
+  // btoa only supports Latin-1
+  const bytes = new TextEncoder().encode(horizontal);
+  const code = `COPC:${btoa(String.fromCharCode(...bytes))}`;
   if (!proj4.defs(code)) {
     proj4.defs(code, horizontal);
     register(proj4);
