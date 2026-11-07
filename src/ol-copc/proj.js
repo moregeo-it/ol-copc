@@ -48,12 +48,47 @@ export function getHorizontalWkt(wkt) {
 }
 
 /**
+ * The long WKT2 keywords for the reference systems, which proj4 doesn't support.
+ * @type {Object<string, string>}
+ */
+const SHORT_KEYWORDS = {
+  PROJECTEDCRS: 'PROJCRS',
+  GEOGRAPHICCRS: 'GEOGCRS',
+  GEODETICCRS: 'GEODCRS',
+};
+
+/**
+ * Converts a WKT to the form proj4 can parse: keywords in upper case and in their
+ * short form, with brackets as delimiters. Quoted strings are kept as they are.
+ * @param {string} wkt WKT1 or WKT2
+ * @return {string} The normalized WKT.
+ */
+export function normalizeWkt(wkt) {
+  return wkt.replace(
+    /"(?:[^"]|"")*"|([A-Z_]\w*)(\s*[[(])|\(|\)/gi,
+    (match, keyword, delimiter) => {
+      if (keyword) {
+        const upper = keyword.toUpperCase();
+        return (SHORT_KEYWORDS[upper] || upper) + delimiter.replace('(', '[');
+      }
+      if (match === '(') {
+        return '[';
+      }
+      if (match === ')') {
+        return ']';
+      }
+      return match;
+    },
+  );
+}
+
+/**
  * Registers the horizontal reference system of a WKT with proj4 and OpenLayers.
  * @param {string} wkt WKT1 or WKT2
  * @return {import("ol/proj/Projection.js").default} The projection.
  */
 export function registerWkt(wkt) {
-  const horizontal = getHorizontalWkt(wkt);
+  const horizontal = normalizeWkt(getHorizontalWkt(wkt));
   const code = `COPC:${btoa(horizontal)}`;
   if (!proj4.defs(code)) {
     proj4.defs(code, horizontal);
