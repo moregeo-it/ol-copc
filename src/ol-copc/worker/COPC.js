@@ -7,6 +7,7 @@ import {PointData, View} from 'copc/lib/las/index.js';
 import {createLazPerf} from 'laz-perf';
 import proj4 from 'proj4';
 import lazPerfWasm from 'virtual:laz-perf-wasm';
+import {readPoints} from '../points.js';
 
 /** @type {function(): Worker} */ export let create;
 
@@ -78,51 +79,15 @@ async function decode(compressed, pointCount, target) {
     /** @type {*} */ (await lazPerf),
   );
   const colors = [2, 3, 5, 7, 8, 10].includes(header.pointDataRecordFormat);
-  const include = ['X', 'Y', 'Z', 'Intensity', 'Classification'];
+  const include = ['X', 'Y', 'Z', 'Intensity', 'Classification', 'Withheld'];
   if (colors) {
     include.push('Red', 'Green', 'Blue');
   }
   const view = View.create(buffer, header, eb, include);
   const converter = proj4(metadata.source, register(target));
-  const count = view.pointCount;
-  const getX = view.getter('X');
-  const getY = view.getter('Y');
-  const getZ = view.getter('Z');
-  const getIntensity = view.getter('Intensity');
-  const getClassification = view.getter('Classification');
-  const data = {
-    count,
-    origin: [0, 0],
-    xy: new Float32Array(count * 2),
-    z: new Float32Array(count),
-    rgb: colors ? new Uint16Array(count * 3) : null,
-    classification: new Uint8Array(count),
-    intensity: new Uint16Array(count),
-  };
-  for (let i = 0; i < count; i++) {
-    const [x, y] = converter.forward([getX(i), getY(i)]);
-    if (i === 0) {
-      data.origin = [x, y];
-    }
-    data.xy[i * 2] = x - data.origin[0];
-    data.xy[i * 2 + 1] = y - data.origin[1];
-    data.z[i] = getZ(i);
-    data.intensity[i] = getIntensity(i);
-    data.classification[i] = getClassification(i);
-  }
-  if (colors) {
-    const getters = [
-      view.getter('Red'),
-      view.getter('Green'),
-      view.getter('Blue'),
-    ];
-    for (let i = 0; i < count; i++) {
-      for (let c = 0; c < 3; c++) {
-        data.rgb[i * 3 + c] = getters[c](i);
-      }
-    }
-  }
-  return data;
+  return readPoints(view, colors, (coordinate) =>
+    converter.forward(coordinate),
+  );
 }
 
 worker.onmessage = async (/** @type {MessageEvent} */ event) => {

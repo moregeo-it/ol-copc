@@ -401,7 +401,7 @@ class COPCSource extends Source {
       node.pointCount,
       getProjectionDefinition(projection),
     );
-    if (key === ROOT && !this.statistics_) {
+    if (key === ROOT && !this.statistics_ && data.count > 0) {
       this.updateStatistics_(data);
     }
     return data;

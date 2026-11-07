@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Withheld points are no longer shown, as the LAS specification considers them deleted
 - Color points by elevation by default if the colors of a file are all black (i.e. not filled)
 - Detect the horizontal reference system in compound WKT definitions whose names contain brackets
 
