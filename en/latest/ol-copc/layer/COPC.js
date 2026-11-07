@@ -29,6 +29,8 @@ import COPCLayerRenderer from '../renderer/COPCLayer.js';
  * @property {number} [edl=1] The strength of the eye-dome lighting (0 disables it).
  * @property {boolean} [walls=true] Whether to draw walls below elevated points in the oblique view.
  * @property {boolean} [shading=true] Whether points are shaded as domes.
+ * @property {boolean} [hideNoise=false] Whether to hide the points classified as noise
+ * (ASPRS classes 7 "Low Point (noise)" and 18 "High Noise").
  * @property {string} [className='ol-layer'] A CSS class name to set to the layer element.
  * @property {number} [opacity=1] Opacity (0, 1).
  * @property {boolean} [visible=true] Visibility.
@@ -131,6 +133,11 @@ class COPCLayer extends Layer {
          * @private
          */
         this.shading_ = options.shading !== false;
+        /**
+         * @type {boolean}
+         * @private
+         */
+        this.hideNoise_ = options.hideNoise === true;
     }
     /**
      * @return {number} The tilt of the view in degrees.
@@ -266,6 +273,22 @@ class COPCLayer extends Layer {
      */
     getShading() {
         return this.shading_;
+    }
+    /**
+     * @return {boolean} Whether the points classified as noise are hidden.
+     * @api
+     */
+    getHideNoise() {
+        return this.hideNoise_;
+    }
+    /**
+     * @param {boolean} hideNoise Whether to hide the points classified as noise
+     * (ASPRS classes 7 "Low Point (noise)" and 18 "High Noise").
+     * @api
+     */
+    setHideNoise(hideNoise) {
+        this.hideNoise_ = hideNoise;
+        this.changed();
     }
     /**
      * @return {COPCLayerRenderer} The renderer.

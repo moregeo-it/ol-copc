@@ -71,6 +71,10 @@ export type Parameters = {
      * Whether points are shaded as domes.
      */
     shading: boolean;
+    /**
+     * Whether the points classified as noise are hidden.
+     */
+    hideNoise: boolean;
 };
 /**
  * @classdesc

@@ -45,7 +45,7 @@
     <div class="container-fluid line-numbers">
       <div id="latest-check" class="alert alert-warning alert-dismissible" role="alert" style="display:none">
         <button id="latest-dismiss" type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        This example uses OL COPC v<span>0.1.2</span>. The <a id="latest-link" href="#" class="alert-link">latest</a> is v<span id="latest-version"></span>.
+        This example uses OL COPC v<span>0.2.0</span>. The <a id="latest-link" href="#" class="alert-link">latest</a> is v<span id="latest-version"></span>.
       </div>
 
 
@@ -163,6 +163,7 @@
 <label for="edl">Eye-dome lighting</label>
 <input id="edl" type="range" min="0" max="3" step="0.1" value="1">
 <label><input id="walls" type="checkbox" checked> Walls in the tilted view</label>
+<label><input id="noise" type="checkbox" checked> Hide noise</label>
 <style>
   #view-controls {
     bottom: 0.5em;
@@ -226,6 +227,7 @@ const dataset &#x3D; document.getElementById(&#x27;dataset&#x27;);
 const color &#x3D; document.getElementById(&#x27;color&#x27;);
 const edl &#x3D; document.getElementById(&#x27;edl&#x27;);
 const walls &#x3D; document.getElementById(&#x27;walls&#x27;);
+const noise &#x3D; document.getElementById(&#x27;noise&#x27;);
 
 const map &#x3D; new Map({
   target: &#x27;map&#x27;,
@@ -257,6 +259,7 @@ function showDataset() {
     colorMode: colorMode,
     edl: Number(edl.value),
     walls: walls.checked,
+    hideNoise: noise.checked,
   });
   map.addLayer(pointCloud);
 
@@ -287,6 +290,7 @@ tilt.addEventListener(&#x27;input&#x27;, () &#x3D;&gt; {
 });
 edl.addEventListener(&#x27;input&#x27;, () &#x3D;&gt; pointCloud.setEDL(Number(edl.value)));
 walls.addEventListener(&#x27;change&#x27;, () &#x3D;&gt; pointCloud.setWalls(walls.checked));
+noise.addEventListener(&#x27;change&#x27;, () &#x3D;&gt; pointCloud.setHideNoise(noise.checked));
 
 const rotate &#x3D; (delta) &#x3D;&gt; {
   const view &#x3D; map.getView();
@@ -340,6 +344,7 @@ document
     &lt;label for&#x3D;&quot;edl&quot;&gt;Eye-dome lighting&lt;/label&gt;
     &lt;input id&#x3D;&quot;edl&quot; type&#x3D;&quot;range&quot; min&#x3D;&quot;0&quot; max&#x3D;&quot;3&quot; step&#x3D;&quot;0.1&quot; value&#x3D;&quot;1&quot;&gt;
     &lt;label&gt;&lt;input id&#x3D;&quot;walls&quot; type&#x3D;&quot;checkbox&quot; checked&gt; Walls in the tilted view&lt;/label&gt;
+    &lt;label&gt;&lt;input id&#x3D;&quot;noise&quot; type&#x3D;&quot;checkbox&quot; checked&gt; Hide noise&lt;/label&gt;
     &lt;style&gt;
       #view-controls {
         bottom: 0.5em;
@@ -369,7 +374,7 @@ document
         <pre><code id="example-pkg-source" class="language-json">{
   &quot;name&quot;: &quot;copc&quot;,
   &quot;dependencies&quot;: {
-    &quot;ol-copc&quot;: &quot;0.1.2&quot;,
+    &quot;ol-copc&quot;: &quot;0.2.0&quot;,
     &quot;ol&quot;: &quot;&gt;&#x3D;9.0.0&quot;,
     &quot;proj4&quot;: &quot;^2.16.1&quot;
   },
@@ -410,7 +415,7 @@ document
         const branchSearch = url.match(/\/([^\/]*)\/examples\//);
         const storageKey = 'ol-dismissed=-' + latestVersion;
         const dismissed = localStorage.getItem(storageKey) === 'true';
-        if (branchSearch && !dismissed && /^v[0-9\.]*$/.test(branchSearch[1]) && '0.1.2' != latestVersion) {
+        if (branchSearch && !dismissed && /^v[0-9\.]*$/.test(branchSearch[1]) && '0.2.0' != latestVersion) {
           const link = url.replace(branchSearch[0], '/latest/examples/');
           fetch(link, {method: 'head'}).then(function(response) {
             const a = document.getElementById('latest-link');

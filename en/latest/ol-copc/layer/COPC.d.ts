@@ -67,6 +67,11 @@ export type Options = {
      */
     shading?: boolean | undefined;
     /**
+     * Whether to hide the points classified as noise
+     * (ASPRS classes 7 "Low Point (noise)" and 18 "High Noise").
+     */
+    hideNoise?: boolean | undefined;
+    /**
      * A CSS class name to set to the layer element.
      */
     className?: string | undefined;
@@ -189,6 +194,11 @@ declare class COPCLayer extends Layer<import("../source/COPC.js").default, COPCL
      */
     private shading_;
     /**
+     * @type {boolean}
+     * @private
+     */
+    private hideNoise_;
+    /**
      * @return {number} The tilt of the view in degrees.
      * @api
      */
@@ -280,6 +290,17 @@ declare class COPCLayer extends Layer<import("../source/COPC.js").default, COPCL
      * @api
      */
     getShading(): boolean;
+    /**
+     * @return {boolean} Whether the points classified as noise are hidden.
+     * @api
+     */
+    getHideNoise(): boolean;
+    /**
+     * @param {boolean} hideNoise Whether to hide the points classified as noise
+     * (ASPRS classes 7 "Low Point (noise)" and 18 "High Noise").
+     * @api
+     */
+    setHideNoise(hideNoise: boolean): void;
 }
 import COPCLayerRenderer from '../renderer/COPCLayer.js';
 import Layer from 'ol/layer/Layer.js';

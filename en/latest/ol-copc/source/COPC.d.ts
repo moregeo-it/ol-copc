@@ -46,6 +46,7 @@ export class COPCSourceEvent extends BaseEvent {
  * @property {number} top The elevation of the highest objects without outliers (99.5th percentile).
  * @property {number} intensity The highest intensity without outliers (99th percentile).
  * @property {number} colorScale The factor to scale the colors to 16 bits.
+ * @property {boolean} colors Whether the colors are filled, i.e. not all black.
  */
 export const ROOT: "0-0-0-0";
 export default COPCSource;
@@ -101,6 +102,10 @@ export type Statistics = {
      * The factor to scale the colors to 16 bits.
      */
     colorScale: number;
+    /**
+     * Whether the colors are filled, i.e. not all black.
+     */
+    colors: boolean;
 };
 import BaseEvent from 'ol/events/Event.js';
 /**
@@ -181,6 +186,7 @@ declare class COPCSource extends Source {
      */
     getMetadata(): import("copc").Copc | null;
     /**
+     * Colors that are all black (e.g. not filled) count as no colors once the root node is loaded.
      * @return {boolean} Whether the points have colors.
      * @api
      */
