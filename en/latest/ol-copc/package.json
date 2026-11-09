@@ -1,6 +1,6 @@
 {
   "name": "ol-copc",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cloud Optimized Point Clouds (COPC) for OpenLayers, top-down or in a tilted view",
   "homepage": "https://moregeo.it",
   "license": "Apache-2.0",
