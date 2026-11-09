@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Compound WKT2 whose horizontal part is a `BOUNDCRS`, as written by PROJ, is supported
+- All alternative WKT2 keywords (e.g. `TRF`, `SPHEROID`) are supported
+- A WKT that proj4 can't parse no longer breaks the registration of other projections
+
 ## [0.2.0] - 2026-11-07
 
 ### Added
