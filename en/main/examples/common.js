@@ -26186,6 +26186,12 @@ var PROJJSONBuilderBase = class {
 				result.unit = this.convertUnit(node.find((child) => Array.isArray(child) && (child[0] === "LENGTHUNIT" || child[0] === "ANGLEUNIT" || child[0] === "SCALEUNIT")));
 				result.id = this.getId(node);
 				break;
+			case "COMPOUNDCRS":
+				result.type = "CompoundCRS";
+				result.name = node[1];
+				result.components = node.slice(2).filter((child) => Array.isArray(child) && child[0].endsWith("CRS")).map((child) => this.convert(child));
+				result.id = this.getId(node);
+				break;
 			case "BOUNDCRS":
 				result.type = "BoundCRS";
 				const sourceCrsNode = node.find((child) => Array.isArray(child) && child[0] === "SOURCECRS");
@@ -26248,12 +26254,41 @@ var PROJJSONBuilderBase = class {
 	}
 };
 // node_modules/wkt-parser/buildPROJJSON.js
+function upperCaseKeywords(node) {
+	node[0] = node[0].toUpperCase();
+	for (var i = 1; i < node.length; i++) if (Array.isArray(node[i])) upperCaseKeywords(node[i]);
+}
+var preferredKeywords = {
+	GEODETICCRS: "GEODCRS",
+	GEOGRAPHICCRS: "GEOGCRS",
+	PROJECTEDCRS: "PROJCRS",
+	GEODETICDATUM: "DATUM",
+	TRF: "DATUM",
+	SPHEROID: "ELLIPSOID",
+	PRIMEMERIDIAN: "PRIMEM",
+	PROJECTION: "METHOD",
+	VERTICALCRS: "VERTCRS",
+	VERTICALDATUM: "VDATUM",
+	VRF: "VDATUM",
+	ENGINEERINGCRS: "ENGCRS",
+	ENGINEERINGDATUM: "EDATUM",
+	PARAMETRICDATUM: "PDATUM",
+	TIMEDATUM: "TDATUM",
+	TEMPORALQUANTITY: "TIMEUNIT"
+};
+function usePreferredKeywords(node) {
+	node[0] = preferredKeywords[node[0]] || node[0];
+	for (var i = 1; i < node.length; i++) if (Array.isArray(node[i])) usePreferredKeywords(node[i]);
+}
 /**
-* Builds a PROJJSON object from a WKT array structure.
-* @param {Array} root The root WKT array node.
+* Builds a PROJJSON object from a WKT2 array structure.
+* Keywords are normalized to their upper case, preferred form first.
+* @param {Array} root The root WKT array node. Modified in place.
 * @returns {Object} The PROJJSON object.
 */
 function buildPROJJSON(root) {
+	upperCaseKeywords(root);
+	usePreferredKeywords(root);
 	return PROJJSONBuilderBase.convert(root);
 }
 // node_modules/wkt-parser/detectWKTVersion.js
@@ -26279,7 +26314,7 @@ var ENDED = -1;
 var whitespace = /\s/;
 var latin = /[A-Za-z]/;
 var keyword = /[A-Za-z84_]/;
-var endThings = /[,\]]/;
+var endThings = /[,\])]/;
 var digets = /[\d\.E\-\+]/;
 function Parser(text) {
 	if (typeof text !== "string") throw new Error("not a string");
@@ -26326,7 +26361,7 @@ Parser.prototype.afterItem = function(char) {
 		this.state = NEUTRAL;
 		return;
 	}
-	if (char === "]") {
+	if (char === "]" || char === ")") {
 		this.level--;
 		if (this.word !== null) {
 			this.currentObject.push(this.word);
@@ -26362,7 +26397,7 @@ Parser.prototype.keyword = function(char) {
 		this.word += char;
 		return;
 	}
-	if (char === "[") {
+	if (char === "[" || char === "(") {
 		var newObjects = [];
 		newObjects.push(this.word);
 		this.level++;
@@ -26555,8 +26590,17 @@ function calculateEllipsoid(value, result) {
 		else if (value.ellipsoid.semi_major_axis !== void 0 && value.ellipsoid.semi_minor_axis !== void 0) result.rf = result.a / (result.a - toValue(value.ellipsoid.semi_minor_axis));
 	}
 }
+function isHorizontalCRS(crs) {
+	if (crs.type === "BoundCRS") return Boolean(crs.source_crs) && isHorizontalCRS(crs.source_crs);
+	if (crs.type === "GeodeticCRS") return !crs.coordinate_system || crs.coordinate_system.subtype !== "Cartesian";
+	return crs.type === "GeographicCRS" || crs.type === "ProjectedCRS";
+}
 function transformPROJJSON(projjson, result = {}) {
 	if (!projjson || typeof projjson !== "object") return projjson;
+	if (projjson.type === "CompoundCRS") {
+		const horizontal = (projjson.components || []).find(isHorizontalCRS);
+		return horizontal ? transformPROJJSON(horizontal, result) : result;
+	}
 	if (projjson.type === "BoundCRS") {
 		transformPROJJSON(projjson.source_crs, result);
 		if (projjson.transformation) {
@@ -26678,6 +26722,11 @@ function transformPROJJSON(projjson, result = {}) {
 	if (result.azimuth !== void 0) result.alpha = result.azimuth;
 	if (result.azimuth_at_projection_centre !== void 0) result.alpha = result.azimuth_at_projection_centre;
 	if (result.angle_from_rectified_to_skew_grid) result.rectified_grid_angle = result.angle_from_rectified_to_skew_grid;
+	if (result.long0 === void 0 && result.central_meridian !== void 0) result.long0 = result.central_meridian;
+	if (result.lat0 === void 0 && result.latitude_of_origin !== void 0) result.lat0 = result.latitude_of_origin;
+	if (result.lat0 === void 0 && result.latitude_of_center !== void 0) result.lat0 = result.latitude_of_center;
+	if (result.longc === void 0 && result.longitude_of_center !== void 0) result.longc = result.longitude_of_center;
+	if (result.k0 === void 0 && result.scale_factor !== void 0) result.k0 = result.scale_factor;
 	applyProjectionDefaults(result);
 	return result;
 }
@@ -26694,6 +26743,31 @@ var knownTypes = [
 	"GEODETICDATUM",
 	"ENGCRS",
 	"ENGINEERINGCRS"
+];
+var projectionProperties = [
+	"projName",
+	"axis",
+	"units",
+	"to_meter",
+	"datumCode",
+	"datum_params",
+	"nadgrids",
+	"ellps",
+	"from_greenwich",
+	"a",
+	"rf",
+	"sphere",
+	"k0",
+	"x0",
+	"y0",
+	"long0",
+	"longc",
+	"lat0",
+	"lat1",
+	"lat2",
+	"lat_ts",
+	"alpha",
+	"rectified_grid_angle"
 ];
 function rename(obj, params) {
 	var outName = params[0];
@@ -26865,7 +26939,14 @@ function wkt_parser_default(wkt) {
 	var obj = {};
 	sExpr(lisp, obj);
 	cleanWKT(obj);
-	return obj[type];
+	var result = obj[type];
+	if (type === "COMPD_CS") {
+		var horizontal = result.PROJCS || result.GEOGCS;
+		if (horizontal) projectionProperties.forEach(function(key) {
+			if (key in horizontal) result[key] = horizontal[key];
+		});
+	}
+	return result;
 }
 // node_modules/proj4/lib/defs.js
 /**
