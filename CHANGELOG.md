@@ -9,8 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Reference systems are read by proj4 through wkt-parser 1.7.0 or later, which supports compound reference systems.
-  WKT that only uses parentheses as delimiters is no longer supported, as proj4 doesn't recognize it.
+- Requires proj4 2.23.0 or later, which reads compound reference systems and all WKT2 variants itself
 
 ## [0.2.1] - 2026-11-09
 
