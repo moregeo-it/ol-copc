@@ -2305,7 +2305,7 @@ function toDegrees(angleInRadians) {
 * @param {number} angleInDegrees Angle in degrees.
 * @return {number} Angle in radians.
 */
-function toRadians(angleInDegrees) {
+function toRadians$1(angleInDegrees) {
 	return angleInDegrees * Math.PI / 180;
 }
 /**
@@ -3349,10 +3349,10 @@ function linear(t) {
 */
 function getDistance(c1, c2, radius) {
 	radius = radius || 6371008.8;
-	const lat1 = toRadians(c1[1]);
-	const lat2 = toRadians(c2[1]);
+	const lat1 = toRadians$1(c1[1]);
+	const lat2 = toRadians$1(c2[1]);
 	const deltaLatBy2 = (lat2 - lat1) / 2;
-	const deltaLonBy2 = toRadians(c2[0] - c1[0]) / 2;
+	const deltaLonBy2 = toRadians$1(c2[0] - c1[0]) / 2;
 	const a = Math.sin(deltaLatBy2) * Math.sin(deltaLatBy2) + Math.sin(deltaLonBy2) * Math.sin(deltaLonBy2) * Math.cos(lat1) * Math.cos(lat2);
 	return 2 * radius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
@@ -3970,7 +3970,7 @@ function toLonLat(easting, northing, zone) {
 	const d6 = d5 * d;
 	const latitude = pRad - pTan / r * (d2 / 2 - d4 / 24 * (5 + 3 * pTan2 + 10 * c - 4 * c2 - 9 * E_P2)) + d6 / 720 * (61 + 90 * pTan2 + 298 * c + 45 * pTan4 - 252 * E_P2 - 3 * c2);
 	let longitude = (d - d3 / 6 * (1 + 2 * pTan2 + c) + d5 / 120 * (5 - 2 * c + 28 * pTan2 - 3 * c2 + 8 * E_P2 + 24 * pTan4)) / pCos;
-	longitude = wrap(longitude + toRadians(zoneToCentralLongitude(zone.number)), -Math.PI, Math.PI);
+	longitude = wrap(longitude + toRadians$1(zoneToCentralLongitude(zone.number)), -Math.PI, Math.PI);
 	return [toDegrees(longitude), toDegrees(latitude)];
 }
 var MIN_LATITUDE = -80;
@@ -3987,14 +3987,14 @@ function fromLonLat(longitude, latitude, zone) {
 	longitude = wrap(longitude, MIN_LONGITUDE, MAX_LONGITUDE);
 	if (latitude < MIN_LATITUDE) latitude = MIN_LATITUDE;
 	else if (latitude > MAX_LATITUDE) latitude = MAX_LATITUDE;
-	const latRad = toRadians(latitude);
+	const latRad = toRadians$1(latitude);
 	const latSin = Math.sin(latRad);
 	const latCos = Math.cos(latRad);
 	const latTan = latSin / latCos;
 	const latTan2 = latTan * latTan;
 	const latTan4 = latTan2 * latTan2;
-	const lonRad = toRadians(longitude);
-	const centralLonRad = toRadians(zoneToCentralLongitude(zone.number));
+	const lonRad = toRadians$1(longitude);
+	const centralLonRad = toRadians$1(zoneToCentralLongitude(zone.number));
 	const n = R / Math.sqrt(1 - E * latSin ** 2);
 	const c = E_P2 * latCos ** 2;
 	const a = latCos * wrap(lonRad - centralLonRad, -Math.PI, Math.PI);
@@ -6819,7 +6819,7 @@ function createSnapToN(n) {
 * @return {Type} Rotation constraint.
 */
 function createSnapToZero(tolerance) {
-	const t = tolerance === void 0 ? toRadians(5) : tolerance;
+	const t = tolerance === void 0 ? toRadians$1(5) : tolerance;
 	return (
 	/**
 	* @param {number|undefined} rotation Rotation.
@@ -25974,6 +25974,9 @@ function projString_default(defData) {
 		y_0: function(v) {
 			self.y0 = parseFloat(v);
 		},
+		h_0: function(v) {
+			self.h = parseFloat(v);
+		},
 		k_0: function(v) {
 			self.k0 = parseFloat(v);
 		},
@@ -25997,6 +26000,9 @@ function projString_default(defData) {
 		},
 		south: function() {
 			self.utmSouth = true;
+		},
+		hyperbolic: function() {
+			self.hyperbolic = true;
 		},
 		towgs84: function(v) {
 			self.datum_params = v.split(",").map(function(a) {
@@ -26045,15 +26051,42 @@ function projString_default(defData) {
 	self["projStr"] = defData;
 	return self;
 }
+// node_modules/wkt-parser/util.js
+var D2R = .017453292519943295;
+function d2r(input) {
+	return input * D2R;
+}
+function isEquidistantCylindrical(projName) {
+	return /^(equirectangular|equidistant[ _]cylindrical)/i.test(projName || "");
+}
+function applyProjectionDefaults(wkt) {
+	const normalizedProjName = (wkt.projName || "").toLowerCase().replace(/_/g, " ");
+	if (wkt.long0 === void 0 && wkt.longc !== void 0) wkt.long0 = wkt.longc;
+	if (!wkt.lat_ts && wkt.lat1 && (normalizedProjName === "stereographic south pole" || normalizedProjName === "polar stereographic (variant b)")) {
+		wkt.lat0 = d2r(wkt.lat1 > 0 ? 90 : -90);
+		wkt.lat_ts = wkt.lat1;
+		delete wkt.lat1;
+	} else if (!wkt.lat_ts && wkt.lat0 && (normalizedProjName === "polar stereographic" || normalizedProjName === "polar stereographic (variant a)")) {
+		wkt.lat_ts = wkt.lat0;
+		wkt.lat0 = d2r(wkt.lat0 > 0 ? 90 : -90);
+		delete wkt.lat1;
+	} else if (wkt.lat_ts === void 0 && wkt.lat1 !== void 0 && isEquidistantCylindrical(wkt.projName)) {
+		wkt.lat_ts = wkt.lat1;
+		delete wkt.lat1;
+	}
+}
 // node_modules/wkt-parser/PROJJSONBuilder.js
 var PROJJSONBuilderBase = class {
 	static getId(node) {
 		const idNode = node.find((child) => Array.isArray(child) && child[0] === "ID");
 		if (idNode && idNode.length >= 3) return {
 			authority: idNode[1],
-			code: parseInt(idNode[2], 10)
+			code: this.parseCode(idNode[2])
 		};
 		return null;
+	}
+	static parseCode(code) {
+		return /^-?\d+$/.test(code) ? parseInt(code, 10) : code;
 	}
 	static convertUnit(node, type = "unit") {
 		if (!node || node.length < 3) return {
@@ -26070,7 +26103,7 @@ var PROJJSONBuilderBase = class {
 			conversion_factor: conversionFactor,
 			id: idNode ? {
 				authority: idNode[1],
-				code: parseInt(idNode[2], 10)
+				code: this.parseCode(idNode[2])
 			} : null
 		};
 	}
@@ -26100,12 +26133,23 @@ var PROJJSONBuilderBase = class {
 	static extractAxes(node) {
 		return node.filter((child) => Array.isArray(child) && child[0] === "AXIS").map((axis) => this.convertAxis(axis)).sort((a, b) => (a.order || 0) - (b.order || 0));
 	}
+	static convertPrimeMeridianLongitude(primem, crsAngleUnitNode) {
+		const value = parseFloat(primem[2]);
+		const unitNode = primem.find((child) => Array.isArray(child) && (child[0] === "ANGLEUNIT" || child[0] === "UNIT")) || crsAngleUnitNode;
+		const unit = this.convertUnit(unitNode, "AngularUnit");
+		if (!unit.conversion_factor || Math.abs(unit.conversion_factor / d2r(1) - 1) < 1e-9) return value;
+		return {
+			value,
+			unit
+		};
+	}
 	static convert(node, result = {}) {
 		switch (node[0]) {
 			case "PROJCRS":
 				result.type = "ProjectedCRS";
 				result.name = node[1];
-				result.base_crs = node.find((child) => Array.isArray(child) && child[0] === "BASEGEOGCRS") ? this.convert(node.find((child) => Array.isArray(child) && child[0] === "BASEGEOGCRS")) : null;
+				const baseCrsNode = node.find((child) => Array.isArray(child) && (child[0] === "BASEGEOGCRS" || child[0] === "BASEGEODCRS"));
+				result.base_crs = baseCrsNode ? this.convert(baseCrsNode) : null;
 				result.conversion = node.find((child) => Array.isArray(child) && child[0] === "CONVERSION") ? this.convert(node.find((child) => Array.isArray(child) && child[0] === "CONVERSION")) : null;
 				const csNode = node.find((child) => Array.isArray(child) && child[0] === "CS");
 				if (csNode) result.coordinate_system = {
@@ -26120,6 +26164,7 @@ var PROJJSONBuilderBase = class {
 				result.id = this.getId(node);
 				break;
 			case "BASEGEOGCRS":
+			case "BASEGEODCRS":
 			case "GEOGCRS":
 			case "GEODCRS":
 				result.type = node[0] === "GEODCRS" ? "GeodeticCRS" : "GeographicCRS";
@@ -26132,7 +26177,7 @@ var PROJJSONBuilderBase = class {
 					const primem = node.find((child) => Array.isArray(child) && child[0] === "PRIMEM");
 					if (primem && primem[1] !== "Greenwich") datumOrEnsemble.prime_meridian = {
 						name: primem[1],
-						longitude: parseFloat(primem[2])
+						longitude: this.convertPrimeMeridianLongitude(primem, node.find((child) => Array.isArray(child) && child[0] === "ANGLEUNIT"))
 					};
 				}
 				const geogCsNode = node.find((child) => Array.isArray(child) && child[0] === "CS");
@@ -26166,7 +26211,8 @@ var PROJJSONBuilderBase = class {
 				result.name = node[1];
 				result.semi_major_axis = parseFloat(node[2]);
 				result.inverse_flattening = parseFloat(node[3]);
-				node.find((child) => Array.isArray(child) && child[0] === "LENGTHUNIT") && this.convert(node.find((child) => Array.isArray(child) && child[0] === "LENGTHUNIT"), result);
+				const ellipsoidUnitNode = node.find((child) => Array.isArray(child) && child[0] === "LENGTHUNIT");
+				if (ellipsoidUnitNode) this.convert(ellipsoidUnitNode, result);
 				break;
 			case "CONVERSION":
 				result.type = "Conversion";
@@ -26225,7 +26271,15 @@ var PROJJSONBuilderBase = class {
 				});
 				if (result.parameters.length === 7) {
 					const scaleDifference = result.parameters[6];
-					if (scaleDifference.name === "Scale difference") scaleDifference.value = Math.round((scaleDifference.value - 1) * 0xe8d4a51000) / 1e6;
+					if (scaleDifference.name === "Scale difference" && !scaleDifference.unit.conversion_factor) {
+						scaleDifference.value = Math.round((scaleDifference.value - 1) * 0xe8d4a51000) / 1e6;
+						scaleDifference.unit = {
+							type: "ScaleUnit",
+							name: "parts per million",
+							conversion_factor: 1e-6,
+							id: null
+						};
+					}
 				}
 				result.id = this.getId(node);
 				break;
@@ -26315,7 +26369,7 @@ var whitespace = /\s/;
 var latin = /[A-Za-z]/;
 var keyword = /[A-Za-z84_]/;
 var endThings = /[,\])]/;
-var digets = /[\d\.E\-\+]/;
+var digets = /[\d\.Ee\-\+]/;
 function Parser(text) {
 	if (typeof text !== "string") throw new Error("not a string");
 	this.text = text.trim();
@@ -26541,24 +26595,6 @@ function sExpr(v, obj) {
 			return mapit(obj, key, v);
 	}
 }
-// node_modules/wkt-parser/util.js
-var D2R = .017453292519943295;
-function d2r(input) {
-	return input * D2R;
-}
-function applyProjectionDefaults(wkt) {
-	const normalizedProjName = (wkt.projName || "").toLowerCase().replace(/_/g, " ");
-	if (wkt.long0 === void 0 && wkt.longc !== void 0) wkt.long0 = wkt.longc;
-	if (!wkt.lat_ts && wkt.lat1 && (normalizedProjName === "stereographic south pole" || normalizedProjName === "polar stereographic (variant b)")) {
-		wkt.lat0 = d2r(wkt.lat1 > 0 ? 90 : -90);
-		wkt.lat_ts = wkt.lat1;
-		delete wkt.lat1;
-	} else if (!wkt.lat_ts && wkt.lat0 && (normalizedProjName === "polar stereographic" || normalizedProjName === "polar stereographic (variant a)")) {
-		wkt.lat_ts = wkt.lat0;
-		wkt.lat0 = d2r(wkt.lat0 > 0 ? 90 : -90);
-		delete wkt.lat1;
-	}
-}
 // node_modules/wkt-parser/transformPROJJSON.js
 function processUnit(unit) {
 	let result = {
@@ -26579,6 +26615,34 @@ function processUnit(unit) {
 function toValue(valueOrObject) {
 	if (typeof valueOrObject === "object") return valueOrObject.value * valueOrObject.unit.conversion_factor;
 	return valueOrObject;
+}
+function toRadians(angle) {
+	if (typeof angle !== "object") return angle * Math.PI / 180;
+	return angle.unit === "degree" ? angle.value * Math.PI / 180 : toValue(angle);
+}
+var ARC_SECOND = Math.PI / 648e3;
+var DATUM_PARAMS_UNITS = [
+	1,
+	1,
+	1,
+	ARC_SECOND,
+	ARC_SECOND,
+	ARC_SECOND,
+	1e-6
+];
+function toDatumParam(param, i) {
+	const unit = param.unit;
+	const factor = unit && typeof unit === "object" ? unit.conversion_factor : unit === "degree" ? Math.PI / 180 : unit === "metre" || unit === "unity" ? 1 : null;
+	return factor && i < DATUM_PARAMS_UNITS.length ? param.value * factor / DATUM_PARAMS_UNITS[i] : param.value;
+}
+function isCoordinateFrameRotation(method) {
+	if (!method) return false;
+	if (method.id && method.id.authority === "EPSG") return [
+		9607,
+		1032,
+		1038
+	].includes(Number(method.id.code));
+	return /^Coordinate Frame rotation\b/i.test(method.name);
 }
 function calculateEllipsoid(value, result) {
 	if (value.ellipsoid.radius) {
@@ -26605,7 +26669,10 @@ function transformPROJJSON(projjson, result = {}) {
 		transformPROJJSON(projjson.source_crs, result);
 		if (projjson.transformation) {
 			if (projjson.transformation.method && projjson.transformation.method.name === "NTv2") result.nadgrids = projjson.transformation.parameters[0].value;
-			else result.datum_params = projjson.transformation.parameters.map((param) => param.value);
+			else {
+				result.datum_params = projjson.transformation.parameters.map(toDatumParam);
+				if (result.datum_params.length >= 6 && isCoordinateFrameRotation(projjson.transformation.method)) for (let i = 3; i < 6; ++i) result.datum_params[i] = -result.datum_params[i];
+			}
 		}
 		return result;
 	}
@@ -26631,14 +26698,14 @@ function transformPROJJSON(projjson, result = {}) {
 					result.ellps = value.ellipsoid.name;
 					calculateEllipsoid(value, result);
 				}
-				if (value.prime_meridian) result.from_greenwich = value.prime_meridian.longitude * Math.PI / 180;
+				if (value.prime_meridian) result.from_greenwich = toRadians(value.prime_meridian.longitude);
 				break;
 			case "ellipsoid":
 				result.ellps = value.name;
 				calculateEllipsoid(value, result);
 				break;
 			case "prime_meridian":
-				result.long0 = (value.longitude || 0) * Math.PI / 180;
+				result.long0 = toRadians(value.longitude || 0);
 				break;
 			case "coordinate_system":
 				if (value.axis) {
@@ -26714,6 +26781,9 @@ function transformPROJJSON(projjson, result = {}) {
 	if (result.easting_at_projection_centre) result.x0 = result.easting_at_projection_centre;
 	if (result.false_northing !== void 0) result.y0 = result.false_northing;
 	if (result.northing_at_projection_centre) result.y0 = result.northing_at_projection_centre;
+	if (result.projection_plane_origin_height !== void 0) result.h = result.projection_plane_origin_height;
+	if (result.satellite_height !== void 0) result.h = result.satellite_height;
+	if (result.viewpoint_height !== void 0) result.h = result.viewpoint_height;
 	if (result.standard_parallel_1 !== void 0) result.lat1 = result.standard_parallel_1;
 	if (result.standard_parallel_2 !== void 0) result.lat2 = result.standard_parallel_2;
 	if (result.scale_factor_at_natural_origin !== void 0) result.k0 = result.scale_factor_at_natural_origin;
@@ -26844,7 +26914,11 @@ function setPropertiesFromWkt(wkt) {
 		if (~wkt.datumCode.indexOf("israel")) wkt.datumCode = "isr93";
 	}
 	if (wkt.b && !isFinite(wkt.b)) wkt.b = wkt.a;
-	if (wkt.rectified_grid_angle) wkt.rectified_grid_angle = d2r(wkt.rectified_grid_angle);
+	var angularUnit = geogcs && geogcs.UNIT && geogcs.UNIT.convert;
+	var toRadians = angularUnit && Math.abs(angularUnit / d2r(1) - 1) > 1e-9 ? function(input) {
+		return input * angularUnit;
+	} : d2r;
+	if (wkt.rectified_grid_angle) wkt.rectified_grid_angle = toRadians(wkt.rectified_grid_angle);
 	function toMeter(input) {
 		return input * (wkt.to_meter || 1);
 	}
@@ -26876,14 +26950,14 @@ function setPropertiesFromWkt(wkt) {
 		[
 			"lat0",
 			"latitude_of_center",
-			d2r
+			toRadians
 		],
 		["longitude_of_center", "Longitude_Of_Center"],
 		["longitude_of_center", "Longitude_of_center"],
 		[
 			"longc",
 			"longitude_of_center",
-			d2r
+			toRadians
 		],
 		[
 			"x0",
@@ -26898,36 +26972,41 @@ function setPropertiesFromWkt(wkt) {
 		[
 			"long0",
 			"central_meridian",
-			d2r
+			toRadians
 		],
 		[
 			"lat0",
 			"latitude_of_origin",
-			d2r
-		],
-		[
-			"lat0",
-			"standard_parallel_1",
-			d2r
+			toRadians
 		],
 		[
 			"lat1",
 			"standard_parallel_1",
-			d2r
+			toRadians
 		],
 		[
 			"lat2",
 			"standard_parallel_2",
-			d2r
+			toRadians
+		],
+		[
+			"h",
+			"Height",
+			toMeter
 		],
 		["azimuth", "Azimuth"],
 		[
 			"alpha",
 			"azimuth",
-			d2r
+			toRadians
 		],
 		["srsCode", "name"]
 	].forEach(renamer);
+	if (!isEquidistantCylindrical(wkt.projName)) renamer([
+		"lat0",
+		"standard_parallel_1",
+		toRadians
+	]);
 	applyProjectionDefaults(wkt);
 }
 function wkt_parser_default(wkt) {
@@ -26969,12 +27048,14 @@ function wkt_parser_default(wkt) {
 * @property {number} [longc]
 * @property {number} [x0]
 * @property {number} [y0]
+* @property {number} [h]
 * @property {number} [k0]
 * @property {number} [a]
 * @property {number} [b]
 * @property {true} [R_A]
 * @property {number} [zone]
 * @property {true} [utmSouth]
+* @property {boolean} [hyperbolic]
 * @property {string|Array<number>} [datum_params]
 * @property {number} [to_meter]
 * @property {string} [units]
@@ -26987,8 +27068,8 @@ function wkt_parser_default(wkt) {
 * @property {boolean} [approx]
 * @property {boolean} [over]
 * @property {string} [projStr]
-* @property {<T extends import('./core').TemplateCoordinates>(coordinates: T, enforceAxis?: boolean) => T} inverse
-* @property {<T extends import('./core').TemplateCoordinates>(coordinates: T, enforceAxis?: boolean) => T} forward
+* @property {<T extends import('./core').TemplateCoordinates>(coordinates: T, enforceAxis?: boolean) => T} [inverse]
+* @property {<T extends import('./core').TemplateCoordinates>(coordinates: T, enforceAxis?: boolean) => T} [forward]
 */
 /**
 * @overload
@@ -27045,7 +27126,7 @@ function testDef(code) {
 	return code in defs;
 }
 function testWKT(code) {
-	return code.indexOf("+") !== 0 && code.indexOf("[") !== -1 || typeof code === "object" && !("srsCode" in code);
+	return code.indexOf("+") !== 0 && (code.indexOf("[") !== -1 || code.indexOf("(") !== -1) || typeof code === "object" && !("srsCode" in code);
 }
 var codes = [
 	"3857",
@@ -27138,12 +27219,9 @@ function phi2z_default(eccent, ts) {
 * @property {number} k
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$35() {
+function init$38() {
 	var con = this.b / this.a;
 	this.es = 1 - con * con;
-	if (!("x0" in this)) this.x0 = 0;
-	if (!("y0" in this)) this.y0 = 0;
-	this.long0 = this.long0 || 0;
 	this.e = Math.sqrt(this.es);
 	if (this.lat_ts) {
 		if (this.sphere) this.k0 = Math.cos(this.lat_ts);
@@ -27153,7 +27231,7 @@ function init$35() {
 		else this.k0 = 1;
 	}
 }
-function forward$33(p) {
+function forward$35(p) {
 	var lon = p.x;
 	var lat = p.y;
 	if (lat * 57.29577951308232 > 90 && lat * 57.29577951308232 < -90 && lon * 57.29577951308232 > 180 && lon * 57.29577951308232 < -180) return null;
@@ -27174,7 +27252,7 @@ function forward$33(p) {
 		return p;
 	}
 }
-function inverse$33(p) {
+function inverse$35(p) {
 	var x = p.x - this.x0;
 	var y = p.y - this.y0;
 	var lon, lat;
@@ -27190,9 +27268,9 @@ function inverse$33(p) {
 	return p;
 }
 var merc_default = {
-	init: init$35,
-	forward: forward$33,
-	inverse: inverse$33,
+	init: init$38,
+	forward: forward$35,
+	inverse: inverse$35,
 	names: [
 		"Mercator",
 		"Popular Visualisation Pseudo Mercator",
@@ -27203,11 +27281,11 @@ var merc_default = {
 	]
 };
 // node_modules/proj4/lib/projections/longlat.js
-function init$34() {}
+function init$37() {}
 function identity(pt) {
 	return pt;
 }
-var names$35 = [
+var names$38 = [
 	"longlat",
 	"identity",
 	"lonlat",
@@ -27217,12 +27295,12 @@ var names$35 = [
 // node_modules/proj4/lib/projections.js
 /** @type {Array<Partial<import('./Proj').default>>} */
 var projs = [merc_default, {
-	init: init$34,
+	init: init$37,
 	forward: identity,
 	inverse: identity,
-	names: names$35
+	names: names$38
 }];
-var names$34 = {};
+var names$37 = {};
 var projStore = [];
 /**
 * @param {import('./Proj').default} proj
@@ -27236,7 +27314,7 @@ function add(proj, i) {
 	}
 	projStore[len] = proj;
 	proj.names.forEach(function(n) {
-		names$34[n.toLowerCase()] = len;
+		names$37[n.toLowerCase()] = len;
 	});
 	return this;
 }
@@ -27251,9 +27329,9 @@ function getNormalizedProjName(n) {
 function get(name) {
 	if (!name) return false;
 	var n = name.toLowerCase();
-	if (typeof names$34[n] !== "undefined" && projStore[names$34[n]]) return projStore[names$34[n]];
+	if (typeof names$37[n] !== "undefined" && projStore[names$37[n]]) return projStore[names$37[n]];
 	n = getNormalizedProjName(n);
-	if (n in names$34 && projStore[names$34[n]]) return projStore[names$34[n]];
+	if (n in names$37 && projStore[names$37[n]]) return projStore[names$37[n]];
 }
 function start() {
 	projs.forEach(add);
@@ -27290,7 +27368,7 @@ var ellipsoids = {
 		b: 6356256.91,
 		ellipseName: "Airy 1830"
 	},
-	APL4: {
+	"APL4.9": {
 		a: 6378137,
 		rf: 298.25,
 		ellipseName: "Appl. Physics. 1965"
@@ -27310,6 +27388,11 @@ var ellipsoids = {
 		rf: 300,
 		ellipseName: "Andrae 1876 (Den., Iclnd.)"
 	},
+	danish: {
+		a: 6377019.2563,
+		rf: 300,
+		ellipseName: "Andrae 1876 (Denmark, Iceland)"
+	},
 	aust_SA: {
 		a: 6378160,
 		rf: 298.25,
@@ -27319,6 +27402,11 @@ var ellipsoids = {
 		a: 6378160,
 		rf: 298.247167427,
 		ellipseName: "GRS 67(IUGG 1967)"
+	},
+	GSK2011: {
+		a: 6378136.5,
+		rf: 298.2564151,
+		ellipseName: "GSK-2011"
 	},
 	bessel: {
 		a: 6377397.155,
@@ -27446,6 +27534,11 @@ var ellipsoids = {
 		b: 6355863,
 		ellipseName: "Plessis 1817 (France)"
 	},
+	PZ90: {
+		a: 6378136,
+		rf: 298.25784,
+		ellipseName: "PZ-90"
+	},
 	krass: {
 		a: 6378245,
 		rf: 298.3,
@@ -27471,7 +27564,7 @@ var ellipsoids = {
 		rf: 298.25,
 		ellipseName: "WGS 66"
 	},
-	WGS7: {
+	WGS72: {
 		a: 6378135,
 		rf: 298.26,
 		ellipseName: "WGS 72"
@@ -27618,427 +27711,319 @@ var datums = {
 		ellipse: "intl",
 		datumName: "Reseau National Belge 1972"
 	},
-	EPSG_5451: { towgs84: "6.41,-49.05,-11.28,1.5657,0.5242,6.9718,-5.7649" },
-	IGNF_LURESG: { towgs84: "-192.986,13.673,-39.309,-0.4099,-2.9332,2.6881,0.43" },
-	EPSG_4614: { towgs84: "-119.4248,-303.65872,-11.00061,1.164298,0.174458,1.096259,3.657065" },
-	EPSG_4615: { towgs84: "-494.088,-312.129,279.877,-1.423,-1.013,1.59,-0.748" },
-	ESRI_37241: { towgs84: "-76.822,257.457,-12.817,2.136,-0.033,-2.392,-0.031" },
-	ESRI_37249: { towgs84: "-440.296,58.548,296.265,1.128,10.202,4.559,-0.438" },
-	ESRI_37245: { towgs84: "-511.151,-181.269,139.609,1.05,2.703,1.798,3.071" },
-	EPSG_4178: { towgs84: "24.9,-126.4,-93.2,-0.063,-0.247,-0.041,1.01" },
-	EPSG_4622: { towgs84: "-472.29,-5.63,-304.12,0.4362,-0.8374,0.2563,1.8984" },
-	EPSG_4625: { towgs84: "126.93,547.94,130.41,-2.7867,5.1612,-0.8584,13.8227" },
-	EPSG_5252: { towgs84: "0.023,0.036,-0.068,0.00176,0.00912,-0.01136,0.00439" },
-	EPSG_4314: { towgs84: "597.1,71.4,412.1,0.894,0.068,-1.563,7.58" },
-	EPSG_4282: { towgs84: "-178.3,-316.7,-131.5,5.278,6.077,10.979,19.166" },
-	EPSG_4231: { towgs84: "-83.11,-97.38,-117.22,0.005693,-0.044698,0.044285,0.1218" },
-	EPSG_4274: { towgs84: "-230.994,102.591,25.199,0.633,-0.239,0.9,1.95" },
-	EPSG_4134: { towgs84: "-180.624,-225.516,173.919,-0.81,-1.898,8.336,16.71006" },
-	EPSG_4254: { towgs84: "18.38,192.45,96.82,0.056,-0.142,-0.2,-0.0013" },
-	EPSG_4159: { towgs84: "-194.513,-63.978,-25.759,-3.4027,3.756,-3.352,-0.9175" },
-	EPSG_4687: { towgs84: "0.072,-0.507,-0.245,0.0183,-0.0003,0.007,-0.0093" },
-	EPSG_4227: { towgs84: "-83.58,-397.54,458.78,-17.595,-2.847,4.256,3.225" },
-	EPSG_4746: { towgs84: "599.4,72.4,419.2,-0.062,-0.022,-2.723,6.46" },
-	EPSG_4745: { towgs84: "612.4,77,440.2,-0.054,0.057,-2.797,2.55" },
-	EPSG_6311: { towgs84: "8.846,-4.394,-1.122,-0.00237,-0.146528,0.130428,0.783926" },
-	EPSG_4289: { towgs84: "565.7381,50.4018,465.2904,-0.395026,0.330772,-1.876073,4.07244" },
-	EPSG_4230: { towgs84: "-68.863,-134.888,-111.49,-0.53,-0.14,0.57,-3.4" },
-	EPSG_4154: { towgs84: "-123.02,-158.95,-168.47" },
-	EPSG_4156: { towgs84: "570.8,85.7,462.8,4.998,1.587,5.261,3.56" },
-	EPSG_4299: { towgs84: "482.5,-130.6,564.6,-1.042,-0.214,-0.631,8.15" },
-	EPSG_4179: { towgs84: "33.4,-146.6,-76.3,-0.359,-0.053,0.844,-0.84" },
-	EPSG_4313: { towgs84: "-106.8686,52.2978,-103.7239,0.3366,-0.457,1.8422,-1.2747" },
-	EPSG_4194: { towgs84: "163.511,127.533,-159.789" },
-	EPSG_4195: { towgs84: "105,326,-102.5" },
-	EPSG_4196: { towgs84: "-45,417,-3.5" },
-	EPSG_4611: { towgs84: "-162.619,-276.959,-161.764,0.067753,-2.243648,-1.158828,-1.094246" },
-	EPSG_4633: { towgs84: "137.092,131.66,91.475,-1.9436,-11.5993,-4.3321,-7.4824" },
-	EPSG_4641: { towgs84: "-408.809,366.856,-412.987,1.8842,-0.5308,2.1655,-121.0993" },
-	EPSG_4643: { towgs84: "-480.26,-438.32,-643.429,16.3119,20.1721,-4.0349,-111.7002" },
-	EPSG_4300: { towgs84: "482.5,-130.6,564.6,-1.042,-0.214,-0.631,8.15" },
-	EPSG_4188: { towgs84: "482.5,-130.6,564.6,-1.042,-0.214,-0.631,8.15" },
-	EPSG_4660: { towgs84: "982.6087,552.753,-540.873,6.681627,-31.611492,-19.848161,16.805" },
-	EPSG_4662: { towgs84: "97.295,-263.247,310.882,-1.5999,0.8386,3.1409,13.3259" },
-	EPSG_3906: { towgs84: "577.88891,165.22205,391.18289,4.9145,-0.94729,-13.05098,7.78664" },
-	EPSG_4307: { towgs84: "-209.3622,-87.8162,404.6198,0.0046,3.4784,0.5805,-1.4547" },
-	EPSG_6892: { towgs84: "-76.269,-16.683,68.562,-6.275,10.536,-4.286,-13.686" },
-	EPSG_4690: { towgs84: "221.597,152.441,176.523,2.403,1.3893,0.884,11.4648" },
-	EPSG_4691: { towgs84: "218.769,150.75,176.75,3.5231,2.0037,1.288,10.9817" },
-	EPSG_4629: { towgs84: "72.51,345.411,79.241,-1.5862,-0.8826,-0.5495,1.3653" },
-	EPSG_4630: { towgs84: "165.804,216.213,180.26,-0.6251,-0.4515,-0.0721,7.4111" },
-	EPSG_4692: { towgs84: "217.109,86.452,23.711,0.0183,-0.0003,0.007,-0.0093" },
-	EPSG_9333: { towgs84: "0,0,0,-0.008393,0.000749,-0.010276,0" },
-	EPSG_9059: { towgs84: "0,0,0" },
-	EPSG_4312: { towgs84: "601.705,84.263,485.227,4.7354,1.3145,5.393,-2.3887" },
-	EPSG_4123: { towgs84: "-96.062,-82.428,-121.753,4.801,0.345,-1.376,1.496" },
-	EPSG_4309: { towgs84: "-124.45,183.74,44.64,-0.4384,0.5446,-0.9706,-2.1365" },
-	ESRI_104106: { towgs84: "-283.088,-70.693,117.445,-1.157,0.059,-0.652,-4.058" },
-	EPSG_4281: { towgs84: "-219.247,-73.802,269.529" },
-	EPSG_4322: { towgs84: "0,0,4.5" },
-	EPSG_4324: { towgs84: "0,0,1.9" },
-	EPSG_4284: { towgs84: "43.822,-108.842,-119.585,1.455,-0.761,0.737,0.549" },
-	EPSG_4277: { towgs84: "446.448,-125.157,542.06,0.15,0.247,0.842,-20.489" },
-	EPSG_4207: { towgs84: "-282.1,-72.2,120,-1.529,0.145,-0.89,-4.46" },
-	EPSG_4688: { towgs84: "347.175,1077.618,2623.677,33.9058,-70.6776,9.4013,186.0647" },
-	EPSG_4689: { towgs84: "410.793,54.542,80.501,-2.5596,-2.3517,-0.6594,17.3218" },
-	EPSG_4720: { towgs84: "0,0,4.5" },
-	EPSG_4273: { towgs84: "278.3,93,474.5,7.889,0.05,-6.61,6.21" },
-	EPSG_4240: { towgs84: "204.64,834.74,293.8" },
-	EPSG_4817: { towgs84: "278.3,93,474.5,7.889,0.05,-6.61,6.21" },
-	ESRI_104131: { towgs84: "426.62,142.62,460.09,4.98,4.49,-12.42,-17.1" },
-	EPSG_4265: { towgs84: "-104.1,-49.1,-9.9,0.971,-2.917,0.714,-11.68" },
-	EPSG_4263: { towgs84: "-111.92,-87.85,114.5,1.875,0.202,0.219,0.032" },
-	EPSG_4298: { towgs84: "-689.5937,623.84046,-65.93566,-0.02331,1.17094,-0.80054,5.88536" },
-	EPSG_4270: { towgs84: "-253.4392,-148.452,386.5267,0.15605,0.43,-0.1013,-0.0424" },
-	EPSG_4229: { towgs84: "-121.8,98.1,-10.7" },
-	EPSG_4220: { towgs84: "-55.5,-348,-229.2" },
-	EPSG_4214: { towgs84: "12.646,-155.176,-80.863" },
-	EPSG_4232: { towgs84: "-345,3,223" },
-	EPSG_4238: { towgs84: "-1.977,-13.06,-9.993,0.364,0.254,0.689,-1.037" },
-	EPSG_4168: { towgs84: "-170,33,326" },
-	EPSG_4131: { towgs84: "199,931,318.9" },
-	EPSG_4152: { towgs84: "-0.9102,2.0141,0.5602,0.029039,0.010065,0.010101,0" },
-	EPSG_5228: { towgs84: "572.213,85.334,461.94,4.9732,1.529,5.2484,3.5378" },
-	EPSG_8351: { towgs84: "485.021,169.465,483.839,7.786342,4.397554,4.102655,0" },
-	EPSG_4683: { towgs84: "-127.62,-67.24,-47.04,-3.068,4.903,1.578,-1.06" },
-	EPSG_4133: { towgs84: "0,0,0" },
-	EPSG_7373: { towgs84: "0.819,-0.5762,-1.6446,-0.00378,-0.03317,0.00318,0.0693" },
-	EPSG_9075: { towgs84: "-0.9102,2.0141,0.5602,0.029039,0.010065,0.010101,0" },
-	EPSG_9072: { towgs84: "-0.9102,2.0141,0.5602,0.029039,0.010065,0.010101,0" },
-	EPSG_9294: { towgs84: "1.16835,-1.42001,-2.24431,-0.00822,-0.05508,0.01818,0.23388" },
-	EPSG_4212: { towgs84: "-267.434,173.496,181.814,-13.4704,8.7154,7.3926,14.7492" },
-	EPSG_4191: { towgs84: "-44.183,-0.58,-38.489,2.3867,2.7072,-3.5196,-8.2703" },
-	EPSG_4237: { towgs84: "52.684,-71.194,-13.975,-0.312,-0.1063,-0.3729,1.0191" },
-	EPSG_4740: { towgs84: "-1.08,-0.27,-0.9" },
-	EPSG_4124: { towgs84: "419.3836,99.3335,591.3451,0.850389,1.817277,-7.862238,-0.99496" },
-	EPSG_5681: { towgs84: "584.9636,107.7175,413.8067,1.1155,0.2824,-3.1384,7.9922" },
-	EPSG_4141: { towgs84: "23.772,17.49,17.859,-0.3132,-1.85274,1.67299,-5.4262" },
-	EPSG_4204: { towgs84: "-85.645,-273.077,-79.708,2.289,-1.421,2.532,3.194" },
-	EPSG_4319: { towgs84: "226.702,-193.337,-35.371,-2.229,-4.391,9.238,0.9798" },
-	EPSG_4200: { towgs84: "24.82,-131.21,-82.66" },
-	EPSG_4130: { towgs84: "0,0,0" },
-	EPSG_4127: { towgs84: "-82.875,-57.097,-156.768,-2.158,1.524,-0.982,-0.359" },
-	EPSG_4149: { towgs84: "674.374,15.056,405.346" },
-	EPSG_4617: { towgs84: "-0.991,1.9072,0.5129,0.02579,0.00965,0.01166,0" },
-	EPSG_4663: { towgs84: "-210.502,-66.902,-48.476,2.094,-15.067,-5.817,0.485" },
-	EPSG_4664: { towgs84: "-211.939,137.626,58.3,-0.089,0.251,0.079,0.384" },
-	EPSG_4665: { towgs84: "-105.854,165.589,-38.312,-0.003,-0.026,0.024,-0.048" },
-	EPSG_4666: { towgs84: "631.392,-66.551,481.442,1.09,-4.445,-4.487,-4.43" },
-	EPSG_4756: { towgs84: "-192.873,-39.382,-111.202,-0.00205,-0.0005,0.00335,0.0188" },
-	EPSG_4723: { towgs84: "-179.483,-69.379,-27.584,-7.862,8.163,6.042,-13.925" },
-	EPSG_4726: { towgs84: "8.853,-52.644,180.304,-0.393,-2.323,2.96,-24.081" },
-	EPSG_4267: { towgs84: "-8.0,160.0,176.0" },
-	EPSG_5365: { towgs84: "-0.16959,0.35312,0.51846,0.03385,-0.16325,0.03446,0.03693" },
-	EPSG_4218: { towgs84: "304.5,306.5,-318.1" },
-	EPSG_4242: { towgs84: "-33.722,153.789,94.959,-8.581,-4.478,4.54,8.95" },
-	EPSG_4216: { towgs84: "-292.295,248.758,429.447,4.9971,2.99,6.6906,1.0289" },
-	ESRI_104105: { towgs84: "631.392,-66.551,481.442,1.09,-4.445,-4.487,-4.43" },
-	ESRI_104129: { towgs84: "0,0,0" },
-	EPSG_4673: { towgs84: "174.05,-25.49,112.57" },
-	EPSG_4202: { towgs84: "-124,-60,154" },
-	EPSG_4203: { towgs84: "-117.763,-51.51,139.061,0.292,0.443,0.277,-0.191" },
-	EPSG_3819: { towgs84: "595.48,121.69,515.35,4.115,-2.9383,0.853,-3.408" },
-	EPSG_8694: { towgs84: "-93.799,-132.737,-219.073,-1.844,0.648,-6.37,-0.169" },
-	EPSG_4145: { towgs84: "275.57,676.78,229.6" },
-	EPSG_4283: { towgs84: "0.06155,-0.01087,-0.04019,0.039492,0.032722,0.032898,-0.009994" },
-	EPSG_4317: { towgs84: "2.3287,-147.0425,-92.0802,-0.309248,0.324822,0.497299,5.689063" },
-	EPSG_4272: { towgs84: "59.47,-5.04,187.44,0.47,-0.1,1.024,-4.5993" },
-	EPSG_4248: { towgs84: "-307.7,265.3,-363.5" },
-	EPSG_5561: { towgs84: "24,-121,-76" },
-	EPSG_5233: { towgs84: "-0.293,766.95,87.713,0.195704,1.695068,3.473016,-0.039338" },
-	ESRI_104130: { towgs84: "-86,-98,-119" },
-	ESRI_104102: { towgs84: "682,-203,480" },
-	ESRI_37207: { towgs84: "7,-10,-26" },
-	EPSG_4675: { towgs84: "59.935,118.4,-10.871" },
-	ESRI_104109: { towgs84: "-89.121,-348.182,260.871" },
-	ESRI_104112: { towgs84: "-185.583,-230.096,281.361" },
-	ESRI_104113: { towgs84: "25.1,-275.6,222.6" },
-	IGNF_WGS72G: { towgs84: "0,12,6" },
-	IGNF_NTFG: { towgs84: "-168,-60,320" },
-	IGNF_EFATE57G: { towgs84: "-127,-769,472" },
-	IGNF_PGP50G: { towgs84: "324.8,153.6,172.1" },
-	IGNF_REUN47G: { towgs84: "94,-948,-1262" },
-	IGNF_CSG67G: { towgs84: "-186,230,110" },
-	IGNF_GUAD48G: { towgs84: "-467,-16,-300" },
-	IGNF_TAHI51G: { towgs84: "162,117,154" },
-	IGNF_TAHAAG: { towgs84: "65,342,77" },
-	IGNF_NUKU72G: { towgs84: "84,274,65" },
-	IGNF_PETRELS72G: { towgs84: "365,194,166" },
-	IGNF_WALL78G: { towgs84: "253,-133,-127" },
-	IGNF_MAYO50G: { towgs84: "-382,-59,-262" },
-	IGNF_TANNAG: { towgs84: "-139,-967,436" },
-	IGNF_IGN72G: { towgs84: "-13,-348,292" },
-	IGNF_ATIGG: { towgs84: "1118,23,66" },
-	IGNF_FANGA84G: { towgs84: "150.57,158.33,118.32" },
-	IGNF_RUSAT84G: { towgs84: "202.13,174.6,-15.74" },
-	IGNF_KAUE70G: { towgs84: "126.74,300.1,-75.49" },
-	IGNF_MOP90G: { towgs84: "-10.8,-1.8,12.77" },
-	IGNF_MHPF67G: { towgs84: "338.08,212.58,-296.17" },
-	IGNF_TAHI79G: { towgs84: "160.61,116.05,153.69" },
-	IGNF_ANAA92G: { towgs84: "1.5,3.84,4.81" },
-	IGNF_MARQUI72G: { towgs84: "330.91,-13.92,58.56" },
-	IGNF_APAT86G: { towgs84: "143.6,197.82,74.05" },
-	IGNF_TUBU69G: { towgs84: "237.17,171.61,-77.84" },
-	IGNF_STPM50G: { towgs84: "11.363,424.148,373.13" },
-	EPSG_4150: { towgs84: "674.374,15.056,405.346" },
-	EPSG_4754: { towgs84: "-208.4058,-109.8777,-2.5764" },
-	ESRI_104101: { towgs84: "372.87,149.23,585.29" },
-	EPSG_4693: { towgs84: "0,-0.15,0.68" },
-	EPSG_6207: { towgs84: "293.17,726.18,245.36" },
-	EPSG_4153: { towgs84: "-133.63,-157.5,-158.62" },
-	EPSG_4132: { towgs84: "-241.54,-163.64,396.06" },
-	EPSG_4221: { towgs84: "-154.5,150.7,100.4" },
-	EPSG_4266: { towgs84: "-80.7,-132.5,41.1" },
-	EPSG_4193: { towgs84: "-70.9,-151.8,-41.4" },
-	EPSG_5340: { towgs84: "-0.41,0.46,-0.35" },
-	EPSG_4246: { towgs84: "-294.7,-200.1,525.5" },
-	EPSG_4318: { towgs84: "-3.2,-5.7,2.8" },
-	EPSG_4121: { towgs84: "-199.87,74.79,246.62" },
-	EPSG_4223: { towgs84: "-260.1,5.5,432.2" },
-	EPSG_4158: { towgs84: "-0.465,372.095,171.736" },
-	EPSG_4285: { towgs84: "-128.16,-282.42,21.93" },
-	EPSG_4613: { towgs84: "-404.78,685.68,45.47" },
-	EPSG_4607: { towgs84: "195.671,332.517,274.607" },
-	EPSG_4475: { towgs84: "-381.788,-57.501,-256.673" },
-	EPSG_4208: { towgs84: "-157.84,308.54,-146.6" },
-	EPSG_4743: { towgs84: "70.995,-335.916,262.898" },
-	EPSG_4710: { towgs84: "-323.65,551.39,-491.22" },
-	EPSG_7881: { towgs84: "-0.077,0.079,0.086" },
-	EPSG_4682: { towgs84: "283.729,735.942,261.143" },
-	EPSG_4739: { towgs84: "-156,-271,-189" },
-	EPSG_4679: { towgs84: "-80.01,253.26,291.19" },
-	EPSG_4750: { towgs84: "-56.263,16.136,-22.856" },
-	EPSG_4644: { towgs84: "-10.18,-350.43,291.37" },
-	EPSG_4695: { towgs84: "-103.746,-9.614,-255.95" },
-	EPSG_4292: { towgs84: "-355,21,72" },
-	EPSG_4302: { towgs84: "-61.702,284.488,472.052" },
-	EPSG_4143: { towgs84: "-124.76,53,466.79" },
-	EPSG_4606: { towgs84: "-153,153,307" },
-	EPSG_4699: { towgs84: "-770.1,158.4,-498.2" },
-	EPSG_4247: { towgs84: "-273.5,110.6,-357.9" },
-	EPSG_4160: { towgs84: "8.88,184.86,106.69" },
-	EPSG_4161: { towgs84: "-233.43,6.65,173.64" },
-	EPSG_9251: { towgs84: "-9.5,122.9,138.2" },
-	EPSG_9253: { towgs84: "-78.1,101.6,133.3" },
-	EPSG_4297: { towgs84: "-198.383,-240.517,-107.909" },
-	EPSG_4269: { towgs84: "0,0,0" },
-	EPSG_4301: { towgs84: "-147,506,687" },
-	EPSG_4618: { towgs84: "-59,-11,-52" },
-	EPSG_4612: { towgs84: "0,0,0" },
-	EPSG_4678: { towgs84: "44.585,-131.212,-39.544" },
-	EPSG_4250: { towgs84: "-130,29,364" },
-	EPSG_4144: { towgs84: "214,804,268" },
-	EPSG_4147: { towgs84: "-17.51,-108.32,-62.39" },
-	EPSG_4259: { towgs84: "-254.1,-5.36,-100.29" },
-	EPSG_4164: { towgs84: "-76,-138,67" },
-	EPSG_4211: { towgs84: "-378.873,676.002,-46.255" },
-	EPSG_4182: { towgs84: "-422.651,-172.995,84.02" },
-	EPSG_4224: { towgs84: "-143.87,243.37,-33.52" },
-	EPSG_4225: { towgs84: "-205.57,168.77,-4.12" },
-	EPSG_5527: { towgs84: "-67.35,3.88,-38.22" },
-	EPSG_4752: { towgs84: "98,390,-22" },
-	EPSG_4310: { towgs84: "-30,190,89" },
-	EPSG_9248: { towgs84: "-192.26,65.72,132.08" },
-	EPSG_4680: { towgs84: "124.5,-63.5,-281" },
-	EPSG_4701: { towgs84: "-79.9,-158,-168.9" },
-	EPSG_4706: { towgs84: "-146.21,112.63,4.05" },
-	EPSG_4805: { towgs84: "682,-203,480" },
-	EPSG_4201: { towgs84: "-165,-11,206" },
-	EPSG_4210: { towgs84: "-157,-2,-299" },
-	EPSG_4183: { towgs84: "-104,167,-38" },
-	EPSG_4139: { towgs84: "11,72,-101" },
-	EPSG_4668: { towgs84: "-86,-98,-119" },
-	EPSG_4717: { towgs84: "-2,151,181" },
-	EPSG_4732: { towgs84: "102,52,-38" },
-	EPSG_4280: { towgs84: "-377,681,-50" },
-	EPSG_4209: { towgs84: "-138,-105,-289" },
-	EPSG_4261: { towgs84: "31,146,47" },
-	EPSG_4658: { towgs84: "-73,46,-86" },
-	EPSG_4721: { towgs84: "265.025,384.929,-194.046" },
-	EPSG_4222: { towgs84: "-136,-108,-292" },
-	EPSG_4601: { towgs84: "-255,-15,71" },
-	EPSG_4602: { towgs84: "725,685,536" },
-	EPSG_4603: { towgs84: "72,213.7,93" },
-	EPSG_4605: { towgs84: "9,183,236" },
-	EPSG_4621: { towgs84: "137,248,-430" },
-	EPSG_4657: { towgs84: "-28,199,5" },
-	EPSG_4316: { towgs84: "103.25,-100.4,-307.19" },
-	EPSG_4642: { towgs84: "-13,-348,292" },
-	EPSG_4698: { towgs84: "145,-187,103" },
-	EPSG_4192: { towgs84: "-206.1,-174.7,-87.7" },
-	EPSG_4311: { towgs84: "-265,120,-358" },
-	EPSG_4135: { towgs84: "58,-283,-182" },
-	ESRI_104138: { towgs84: "198,-226,-347" },
-	EPSG_4245: { towgs84: "-11,851,5" },
-	EPSG_4142: { towgs84: "-125,53,467" },
-	EPSG_4213: { towgs84: "-106,-87,188" },
-	EPSG_4253: { towgs84: "-133,-77,-51" },
-	EPSG_4129: { towgs84: "-132,-110,-335" },
-	EPSG_4713: { towgs84: "-77,-128,142" },
-	EPSG_4239: { towgs84: "217,823,299" },
-	EPSG_4146: { towgs84: "295,736,257" },
-	EPSG_4155: { towgs84: "-83,37,124" },
-	EPSG_4165: { towgs84: "-173,253,27" },
-	EPSG_4672: { towgs84: "175,-38,113" },
-	EPSG_4236: { towgs84: "-637,-549,-203" },
-	EPSG_4251: { towgs84: "-90,40,88" },
-	EPSG_4271: { towgs84: "-2,374,172" },
-	EPSG_4175: { towgs84: "-88,4,101" },
-	EPSG_4716: { towgs84: "298,-304,-375" },
-	EPSG_4315: { towgs84: "-23,259,-9" },
-	EPSG_4744: { towgs84: "-242.2,-144.9,370.3" },
-	EPSG_4244: { towgs84: "-97,787,86" },
-	EPSG_4293: { towgs84: "616,97,-251" },
-	EPSG_4714: { towgs84: "-127,-769,472" },
-	EPSG_4736: { towgs84: "260,12,-147" },
-	EPSG_6883: { towgs84: "-235,-110,393" },
-	EPSG_6894: { towgs84: "-63,176,185" },
-	EPSG_4205: { towgs84: "-43,-163,45" },
-	EPSG_4256: { towgs84: "41,-220,-134" },
-	EPSG_4262: { towgs84: "639,405,60" },
-	EPSG_4604: { towgs84: "174,359,365" },
-	EPSG_4169: { towgs84: "-115,118,426" },
-	EPSG_4620: { towgs84: "-106,-129,165" },
-	EPSG_4184: { towgs84: "-203,141,53" },
-	EPSG_4616: { towgs84: "-289,-124,60" },
-	EPSG_9403: { towgs84: "-307,-92,127" },
-	EPSG_4684: { towgs84: "-133,-321,50" },
-	EPSG_4708: { towgs84: "-491,-22,435" },
-	EPSG_4707: { towgs84: "114,-116,-333" },
-	EPSG_4709: { towgs84: "145,75,-272" },
-	EPSG_4712: { towgs84: "-205,107,53" },
-	EPSG_4711: { towgs84: "124,-234,-25" },
-	EPSG_4718: { towgs84: "230,-199,-752" },
-	EPSG_4719: { towgs84: "211,147,111" },
-	EPSG_4724: { towgs84: "208,-435,-229" },
-	EPSG_4725: { towgs84: "189,-79,-202" },
-	EPSG_4735: { towgs84: "647,1777,-1124" },
-	EPSG_4722: { towgs84: "-794,119,-298" },
-	EPSG_4728: { towgs84: "-307,-92,127" },
-	EPSG_4734: { towgs84: "-632,438,-609" },
-	EPSG_4727: { towgs84: "912,-58,1227" },
-	EPSG_4729: { towgs84: "185,165,42" },
-	EPSG_4730: { towgs84: "170,42,84" },
-	EPSG_4733: { towgs84: "276,-57,149" },
-	ESRI_37218: { towgs84: "230,-199,-752" },
-	ESRI_37240: { towgs84: "-7,215,225" },
-	ESRI_37221: { towgs84: "252,-209,-751" },
-	ESRI_4305: { towgs84: "-123,-206,219" },
-	ESRI_104139: { towgs84: "-73,-247,227" },
-	EPSG_4748: { towgs84: "51,391,-36" },
-	EPSG_4219: { towgs84: "-384,664,-48" },
-	EPSG_4255: { towgs84: "-333,-222,114" },
-	EPSG_4257: { towgs84: "-587.8,519.75,145.76" },
-	EPSG_4646: { towgs84: "-963,510,-359" },
-	EPSG_6881: { towgs84: "-24,-203,268" },
-	EPSG_6882: { towgs84: "-183,-15,273" },
-	EPSG_4715: { towgs84: "-104,-129,239" },
-	IGNF_RGF93GDD: { towgs84: "0,0,0" },
-	IGNF_RGM04GDD: { towgs84: "0,0,0" },
-	IGNF_RGSPM06GDD: { towgs84: "0,0,0" },
-	IGNF_RGTAAF07GDD: { towgs84: "0,0,0" },
-	IGNF_RGFG95GDD: { towgs84: "0,0,0" },
-	IGNF_RGNCG: { towgs84: "0,0,0" },
-	IGNF_RGPFGDD: { towgs84: "0,0,0" },
-	IGNF_ETRS89G: { towgs84: "0,0,0" },
-	IGNF_RGR92GDD: { towgs84: "0,0,0" },
-	EPSG_4173: { towgs84: "0,0,0" },
-	EPSG_4180: { towgs84: "0,0,0" },
-	EPSG_4619: { towgs84: "0,0,0" },
-	EPSG_4667: { towgs84: "0,0,0" },
-	EPSG_4075: { towgs84: "0,0,0" },
-	EPSG_6706: { towgs84: "0,0,0" },
-	EPSG_7798: { towgs84: "0,0,0" },
-	EPSG_4661: { towgs84: "0,0,0" },
-	EPSG_4669: { towgs84: "0,0,0" },
-	EPSG_8685: { towgs84: "0,0,0" },
-	EPSG_4151: { towgs84: "0,0,0" },
-	EPSG_9702: { towgs84: "0,0,0" },
-	EPSG_4758: { towgs84: "0,0,0" },
-	EPSG_4761: { towgs84: "0,0,0" },
-	EPSG_4765: { towgs84: "0,0,0" },
-	EPSG_8997: { towgs84: "0,0,0" },
-	EPSG_4023: { towgs84: "0,0,0" },
-	EPSG_4670: { towgs84: "0,0,0" },
-	EPSG_4694: { towgs84: "0,0,0" },
-	EPSG_4148: { towgs84: "0,0,0" },
-	EPSG_4163: { towgs84: "0,0,0" },
-	EPSG_4167: { towgs84: "0,0,0" },
-	EPSG_4189: { towgs84: "0,0,0" },
-	EPSG_4190: { towgs84: "0,0,0" },
-	EPSG_4176: { towgs84: "0,0,0" },
-	EPSG_4659: { towgs84: "0,0,0" },
-	EPSG_3824: { towgs84: "0,0,0" },
-	EPSG_3889: { towgs84: "0,0,0" },
-	EPSG_4046: { towgs84: "0,0,0" },
-	EPSG_4081: { towgs84: "0,0,0" },
-	EPSG_4558: { towgs84: "0,0,0" },
-	EPSG_4483: { towgs84: "0,0,0" },
-	EPSG_5013: { towgs84: "0,0,0" },
-	EPSG_5264: { towgs84: "0,0,0" },
-	EPSG_5324: { towgs84: "0,0,0" },
-	EPSG_5354: { towgs84: "0,0,0" },
-	EPSG_5371: { towgs84: "0,0,0" },
-	EPSG_5373: { towgs84: "0,0,0" },
-	EPSG_5381: { towgs84: "0,0,0" },
-	EPSG_5393: { towgs84: "0,0,0" },
-	EPSG_5489: { towgs84: "0,0,0" },
-	EPSG_5593: { towgs84: "0,0,0" },
-	EPSG_6135: { towgs84: "0,0,0" },
-	EPSG_6365: { towgs84: "0,0,0" },
-	EPSG_5246: { towgs84: "0,0,0" },
-	EPSG_7886: { towgs84: "0,0,0" },
-	EPSG_8431: { towgs84: "0,0,0" },
-	EPSG_8427: { towgs84: "0,0,0" },
-	EPSG_8699: { towgs84: "0,0,0" },
-	EPSG_8818: { towgs84: "0,0,0" },
-	EPSG_4757: { towgs84: "0,0,0" },
-	EPSG_9140: { towgs84: "0,0,0" },
-	EPSG_8086: { towgs84: "0,0,0" },
-	EPSG_4686: { towgs84: "0,0,0" },
-	EPSG_4737: { towgs84: "0,0,0" },
-	EPSG_4702: { towgs84: "0,0,0" },
-	EPSG_4747: { towgs84: "0,0,0" },
-	EPSG_4749: { towgs84: "0,0,0" },
-	EPSG_4674: { towgs84: "0,0,0" },
-	EPSG_4755: { towgs84: "0,0,0" },
-	EPSG_4759: { towgs84: "0,0,0" },
-	EPSG_4762: { towgs84: "0,0,0" },
-	EPSG_4763: { towgs84: "0,0,0" },
-	EPSG_4764: { towgs84: "0,0,0" },
-	EPSG_4166: { towgs84: "0,0,0" },
-	EPSG_4170: { towgs84: "0,0,0" },
-	EPSG_5546: { towgs84: "0,0,0" },
-	EPSG_7844: { towgs84: "0,0,0" },
-	EPSG_4818: { towgs84: "589,76,480" },
-	EPSG_10328: { towgs84: "0,0,0" },
-	EPSG_9782: { towgs84: "0,0,0" },
-	EPSG_9777: { towgs84: "0,0,0" },
-	EPSG_10690: { towgs84: "0,0,0" },
-	EPSG_10639: { towgs84: "0,0,0" },
-	EPSG_10739: { towgs84: "0,0,0" },
-	EPSG_7686: { towgs84: "0,0,0" },
-	EPSG_8900: { towgs84: "0,0,0" },
-	EPSG_5886: { towgs84: "0,0,0" },
-	EPSG_7683: { towgs84: "0,0,0" },
-	EPSG_6668: { towgs84: "0,0,0" },
-	EPSG_20046: { towgs84: "0,0,0" },
-	EPSG_10299: { towgs84: "0,0,0" },
-	EPSG_10310: { towgs84: "0,0,0" },
-	EPSG_10475: { towgs84: "0,0,0" },
-	EPSG_4742: { towgs84: "0,0,0" },
-	EPSG_10671: { towgs84: "0,0,0" },
-	EPSG_10762: { towgs84: "0,0,0" },
-	EPSG_10725: { towgs84: "0,0,0" },
-	EPSG_10791: { towgs84: "0,0,0" },
-	EPSG_10800: { towgs84: "0,0,0" },
-	EPSG_10305: { towgs84: "0,0,0" },
-	EPSG_10941: { towgs84: "0,0,0" },
-	EPSG_10968: { towgs84: "0,0,0" },
-	EPSG_10875: { towgs84: "0,0,0" },
-	EPSG_6318: { towgs84: "0,0,0" },
-	EPSG_10910: { towgs84: "0,0,0" }
+	amersfoort: {
+		towgs84: "565.7381,50.4018,465.2904,-0.395026,0.330772,-1.876073,4.07244",
+		ellipse: "bessel",
+		datumName: "Amersfoort"
+	}
 };
+var towgs84s = {
+	"213.11,9.37,-74.95": "EPSG_5451",
+	"-192.986,13.673,-39.309,-0.4099,-2.9332,2.6881,0.43": "IGNF_LURESG IGNF_LUREF IGNF_LURES IGNF_LUXGEO",
+	"-119.4248,-303.65872,-11.00061,1.164298,0.174458,1.096259,3.657065": "EPSG_4614",
+	"-499,-249,314": "EPSG_4615",
+	"-76.822,257.457,-12.817,2.136,-0.033,-2.392,-0.031": "ESRI_37241",
+	"-440.296,58.548,296.265,1.128,10.202,4.559,-0.438": "ESRI_37249",
+	"-511.151,-181.269,139.609,1.05,2.703,1.798,3.071": "ESRI_37245",
+	"24.9,-126.4,-93.2,-0.063,-0.247,-0.041,1.01": "EPSG_4178",
+	"-472.29,-5.63,-304.12,0.4362,-0.8374,0.2563,1.8984": "EPSG_4622",
+	"126.93,547.94,130.41,-2.7867,5.1612,-0.8584,13.8227": "EPSG_4625 IGNF_MART38 IGNF_MART38G IGNF_MART38GEO IGNF_MARTFD IGNF_MARTFDG",
+	"0.023,0.036,-0.068,0.00176,0.00912,-0.01136,0.00439": "EPSG_5252 EPSG_5250 EPSG_5251",
+	"597.1,71.4,412.1,0.894,0.068,-1.563,7.58": "EPSG_4314",
+	"-178.3,-316.7,-131.5,5.278,6.077,10.979,19.166": "EPSG_4282",
+	"-83.11,-97.38,-117.22,0.005693,-0.044698,0.044285,0.1218": "EPSG_4231",
+	"-239.749,88.181,30.488,0.263,0.082,1.211,2.229": "EPSG_4274",
+	"-180.624,-225.516,173.919,-0.81,-1.898,8.336,16.71006": "EPSG_4134",
+	"18.38,192.45,96.82,0.056,-0.142,-0.2,-0.0013": "EPSG_4254",
+	"-194.513,-63.978,-25.759,-3.4027,3.756,-3.352,-0.9175": "EPSG_4159",
+	"0.072,-0.507,-0.245,0.0183,-0.0003,0.007,-0.0093": "EPSG_4687 EPSG_4998 EPSG_4999",
+	"-83.58,-397.54,458.78,-17.595,-2.847,4.256,3.225": "EPSG_4227",
+	"599.4,72.4,419.2,-0.062,-0.022,-2.723,6.46": "EPSG_4746",
+	"612.4,77,440.2,-0.054,0.057,-2.797,2.55": "EPSG_4745",
+	"8.846,-4.394,-1.122,-0.00237,-0.146528,0.130428,0.783926": "EPSG_6311 EPSG_6309 EPSG_6310",
+	"565.7381,50.4018,465.2904,-0.395026,0.330772,-1.876073,4.07244": "EPSG_4289",
+	"-89.5,-93.8,-123.1,0,0,-0.156,1.2": "EPSG_4230",
+	"-123.02,-158.95,-168.47": "EPSG_4154",
+	"570.8,85.7,462.8,4.998,1.587,5.261,3.56": "EPSG_4156",
+	"482.5,-130.6,564.6,-1.042,-0.214,-0.631,8.15": "EPSG_4299 EPSG_4300 EPSG_4188",
+	"33.4,-146.6,-76.3,-0.359,-0.053,0.844,-0.84": "EPSG_4179",
+	"-106.8686,52.2978,-103.7239,0.3366,-0.457,1.8422,-1.2747": "EPSG_4313",
+	"163.511,127.533,-159.789,0,0,0.814,-0.6": "EPSG_4194",
+	"105,326,-102.5,0,0,0.814,-0.6": "EPSG_4195",
+	"-45,417,-3.5,0,0,0.814,-0.6": "EPSG_4196",
+	"-162.619,-276.959,-161.764,0.067753,-2.243648,-1.158828,-1.094246": "EPSG_4611",
+	"137.092,131.66,91.475,-1.9436,-11.5993,-4.3321,-7.4824": "EPSG_4633 IGNF_LIFOU56 IGNF_LIFOU56G",
+	"-408.809,366.856,-412.987,1.8842,-0.5308,2.1655,-121.0993": "EPSG_4641 IGNF_MARE53 IGNF_MARE53G",
+	"-480.26,-438.32,-643.429,16.3119,20.1721,-4.0349,-111.7002": "EPSG_4643",
+	"982.6087,552.753,-540.873,6.681627,-31.611492,-19.848161,16.805": "EPSG_4660",
+	"97.295,-263.247,310.882,-1.5999,0.8386,3.1409,13.3259": "EPSG_4662",
+	"577.88891,165.22205,391.18289,4.9145,-0.94729,-13.05098,7.78664": "EPSG_3906",
+	"-209.3622,-87.8162,404.6198,0.0046,3.4784,0.5805,-1.4547": "EPSG_4307",
+	"-76.269,-16.683,68.562,-6.275,10.536,-4.286,-13.686": "EPSG_6892",
+	"221.597,152.441,176.523,2.403,1.3893,0.884,11.4648": "EPSG_4690",
+	"218.769,150.75,176.75,3.5231,2.0037,1.288,10.9817": "EPSG_4691 IGNF_MOOREA87 IGNF_MOOREA87G IGNF_MOOREA87GEO",
+	"72.51,345.411,79.241,-1.5862,-0.8826,-0.5495,1.3653": "EPSG_4629",
+	"165.804,216.213,180.26,-0.6251,-0.4515,-0.0721,7.4111": "EPSG_4630",
+	"217.109,86.452,23.711,0.0183,-0.0003,0.007,-0.0093": "EPSG_4692",
+	"0,0,0,-0.008393,0.000749,-0.010276,0": "EPSG_9333 EPSG_9331 EPSG_9332",
+	"601.705,84.263,485.227,4.7354,1.3145,5.393,-2.3887": "EPSG_4312 EPSG_9266 EPSG_9267",
+	"-96.062,-82.428,-121.753,4.801,0.345,-1.376,1.496": "EPSG_4123",
+	"-124.45,183.74,44.64,-0.4384,0.5446,-0.9706,-2.1365": "EPSG_4309",
+	"-283.088,-70.693,117.445,-1.157,0.059,-0.652,-4.058": "ESRI_104106",
+	"-275.7224,94.7824,340.8944,-8.001,-4.42,-11.821,1": "EPSG_4281",
+	"0,0,4.5,0,0,0.554,0.2263": "EPSG_4322 EPSG_4720 EPSG_4984 EPSG_4985",
+	"0,0,1.9,0,0,0.814,-0.38": "EPSG_4324 EPSG_4986 EPSG_4987",
+	"43.822,-108.842,-119.585,1.455,-0.761,0.737,0.549": "EPSG_4284 ESRI_104135",
+	"446.448,-125.157,542.06,0.15,0.247,0.842,-20.489": "EPSG_4277",
+	"-282.1,-72.2,120,-1.529,0.145,-0.89,-4.46": "EPSG_4207 EPSG_4803",
+	"347.175,1077.618,2623.677,33.9058,-70.6776,9.4013,186.0647": "EPSG_4688",
+	"410.793,54.542,80.501,-2.5596,-2.3517,-0.6594,17.3218": "EPSG_4689",
+	"278.3,93,474.5,7.889,0.05,-6.61,6.21": "EPSG_4273 EPSG_4817",
+	"204.64,834.74,293.8": "EPSG_4240",
+	"426.62,142.62,460.09,4.98,4.49,-12.42,-17.1": "ESRI_104131",
+	"-104.1,-49.1,-9.9,0.971,-2.917,0.714,-11.68": "EPSG_4265 EPSG_4806",
+	"-111.92,-87.85,114.5,1.875,0.202,0.219,0.032": "EPSG_4263",
+	"-689.5937,623.84046,-65.93566,-0.02331,1.17094,-0.80054,5.88536": "EPSG_4298",
+	"-253.4392,-148.452,386.5267,0.15605,0.43,-0.1013,-0.0424": "EPSG_4270",
+	"-130,110,-13": "EPSG_4229",
+	"-55.5,-348,-229.2": "EPSG_4220",
+	"12.646,-155.176,-80.863": "EPSG_4214",
+	"-345,3,223": "EPSG_4232",
+	"-1.977,-13.06,-9.993,0.364,0.254,0.689,-1.037": "EPSG_4238",
+	"-170,33,326": "EPSG_4168",
+	"198,881,317": "EPSG_4131",
+	"-0.9738,1.9453,0.5486,0.027551,0.010049,0.011359,0": "EPSG_4152 EPSG_4956 EPSG_4957",
+	"-0.9102,2.0141,0.5602,0.029039,0.010065,0.010101,0": "EPSG_9075 EPSG_9072 EPSG_9073 EPSG_9074 EPSG_9070 EPSG_9071",
+	"572.213,85.334,461.94,4.9732,1.529,5.2484,3.5378": "EPSG_5228 ESRI_104696 ESRI_104697 EPSG_5229",
+	"485.021,169.465,483.839,7.786342,4.397554,4.102655,0": "EPSG_8351 ESRI_104648",
+	"-127.62,-67.24,-47.04,-3.068,4.903,1.578,-1.06": "EPSG_4683 EPSG_4994 EPSG_4995",
+	"1.16835,-1.42001,-2.24431,-0.00822,-0.05508,0.01818,0.23388": "EPSG_9294 EPSG_9292 EPSG_9293",
+	"31.95,300.99,419.19": "EPSG_4212",
+	"-44.183,-0.58,-38.489,2.3867,2.7072,-3.5196,-8.2703": "EPSG_4191",
+	"52.684,-71.194,-13.975,-0.312,-0.1063,-0.3729,1.0191": "EPSG_4237",
+	"-1.08,-0.27,-0.9,0,0,0.16,-0.12": "EPSG_4740 EPSG_4922 EPSG_4923",
+	"419.3836,99.3335,591.3451,0.850389,1.817277,-7.862238,-0.99496": "EPSG_4124",
+	"584.9636,107.7175,413.8067,1.1155,0.2824,-3.1384,7.9922": "EPSG_5681 EPSG_5828 EPSG_5830",
+	"23.772,17.49,17.859,-0.3132,-1.85274,1.67299,-5.4262": "EPSG_4141",
+	"-85.645,-273.077,-79.708,2.289,-1.421,2.532,3.194": "EPSG_4204",
+	"226.702,-193.337,-35.371,-2.229,-4.391,9.238,0.9798": "EPSG_4319",
+	"24.82,-131.21,-82.66,0,0,0.16,-0.12": "EPSG_4200",
+	"-82.875,-57.097,-156.768,-2.158,1.524,-0.982,-0.359": "EPSG_4127",
+	"674.374,15.056,405.346": "EPSG_4149 EPSG_4150 EPSG_4801",
+	"-0.991,1.9072,0.5129,0.02579,0.00965,0.01166,0": "EPSG_4617 EPSG_4954 EPSG_4955",
+	"-210.502,-66.902,-48.476,2.094,-15.067,-5.817,0.485": "EPSG_4663",
+	"-211.939,137.626,58.3,-0.089,0.251,0.079,0.384": "EPSG_4664",
+	"-105.854,165.589,-38.312,-0.003,-0.026,0.024,-0.048": "EPSG_4665",
+	"631.392,-66.551,481.442,1.09,-4.445,-4.487,-4.43": "EPSG_4666 ESRI_104105 EPSG_4904",
+	"-192.873,-39.382,-111.202,-0.00205,-0.0005,0.00335,0.0188": "EPSG_4756",
+	"-179.483,-69.379,-27.584,-7.862,8.163,6.042,-13.925": "EPSG_4723",
+	"8.853,-52.644,180.304,-0.393,-2.323,2.96,-24.081": "EPSG_4726",
+	"-8.0,160.0,176.0": "EPSG_4267 OGC_CRS27",
+	"-0.16959,0.35312,0.51846,0.03385,-0.16325,0.03446,0.03693": "EPSG_5365 EPSG_5363 EPSG_5364",
+	"304.5,306.5,-318.1": "EPSG_4218 EPSG_4802",
+	"-33.722,153.789,94.959,-8.581,-4.478,4.54,8.95": "EPSG_4242",
+	"-292.295,248.758,429.447,4.9971,2.99,6.6906,1.0289": "EPSG_4216",
+	"174.05,-25.49,112.57,0,0,0.554,0.2263": "EPSG_4673",
+	"-124,-60,154": "EPSG_4202",
+	"-117.763,-51.51,139.061,0.292,0.443,0.277,-0.191": "EPSG_4203",
+	"595.48,121.69,515.35,4.115,-2.9383,0.853,-3.408": "EPSG_3819",
+	"-93.799,-132.737,-219.073,-1.844,0.648,-6.37,-0.169": "EPSG_8694",
+	"275.57,676.78,229.6": "EPSG_4145",
+	"0.06155,-0.01087,-0.04019,0.039492,0.032722,0.032898,-0.009994": "EPSG_4283 EPSG_4938 EPSG_4939",
+	"2.3287,-147.0425,-92.0802,-0.309248,0.324822,0.497299,5.689063": "EPSG_4317",
+	"59.47,-5.04,187.44,0.47,-0.1,1.024,-4.5993": "EPSG_4272",
+	"-307.7,265.3,-363.5": "EPSG_4248",
+	"24,-121,-76": "EPSG_5561 EPSG_5558 EPSG_5560",
+	"-0.293,766.95,87.713,0.195704,1.695068,3.473016,-0.039338": "EPSG_5233 ESRI_104693",
+	"-86,-98,-119": "ESRI_104130 EPSG_4668",
+	"682,-203,480": "ESRI_104102 EPSG_4805",
+	"7,-10,-26": "ESRI_37207",
+	"-100,-248,259": "EPSG_4675",
+	"-89.121,-348.182,260.871": "ESRI_104109",
+	"-185.583,-230.096,281.361": "ESRI_104112",
+	"25.1,-275.6,222.6": "ESRI_104113",
+	"0,12,6": "IGNF_WGS72G IGNF_WGS72 IGNF_WGS72GEO",
+	"-168,-60,320": "IGNF_NTFG IGNF_NTF EPSG_4275 EPSG_4807 IGNF_NTFPGRAD IGNF_NTFP",
+	"-127,-769,472": "IGNF_EFATE57G EPSG_4714 IGNF_EFATE57 IGNF_EFATE57GEO",
+	"324.8,153.6,172.1": "IGNF_PGP50G IGNF_PGP50 IGNF_TERA50 IGNF_TERA50GEO IGNF_TERA50G",
+	"94,-948,-1262": "IGNF_REUN47G IGNF_REUN47 IGNF_REUN47GEO IGNF_REUN49 IGNF_REUN49G EPSG_4626",
+	"-186,230,110": "IGNF_CSG67G IGNF_CSG67 IGNF_CSG67GEO EPSG_4623",
+	"-467,-16,-300": "IGNF_GUAD48G IGNF_GUAD48 IGNF_GUAD48GEO IGNF_GUADANN IGNF_GUADANNG",
+	"162,117,154": "IGNF_TAHI51G IGNF_TAHI51 EPSG_4628",
+	"65,342,77": "IGNF_TAHAAG IGNF_TAHAA IGNF_TAHAAGEO",
+	"84,274,65": "IGNF_NUKU72G IGNF_NUKU72 IGNF_NUKU72GEO",
+	"365,194,166": "IGNF_PETRELS72G IGNF_PETRELS72 EPSG_4636",
+	"253,-133,-127": "IGNF_WALL78G IGNF_WALL78 IGNF_WALL78GEO",
+	"-382,-59,-262": "IGNF_MAYO50G IGNF_MAYO50 IGNF_MAYO50GEO EPSG_4632",
+	"-139,-967,436": "IGNF_TANNAG IGNF_TANNA",
+	"-13,-348,292": "IGNF_IGN72G EPSG_4642 IGNF_IGN72 IGNF_IGN72GEO IGNF_OUVE72 IGNF_OUVE72G IGNF_OUVEA72 IGNF_OUVEA72G",
+	"1118,23,66": "IGNF_ATIGG EPSG_4901 IGNF_ATI IGNF_ATIG",
+	"150.57,158.33,118.32": "IGNF_FANGA84G IGNF_FANGA84",
+	"202.13,174.6,-15.74": "IGNF_RUSAT84G IGNF_RUSAT84 IGNF_SAT84 IGNF_SAT84G",
+	"126.74,300.1,-75.49": "IGNF_KAUE70G IGNF_KAUE70",
+	"-10.8,-1.8,12.77": "IGNF_MOP90G IGNF_MOP90 IGNF_TETIA90 IGNF_TETIA90G",
+	"338.08,212.58,-296.17": "IGNF_MHPF67G IGNF_MHPF67",
+	"160.61,116.05,153.69": "IGNF_TAHI79G IGNF_TAHI79 IGNF_TAHI79GEO",
+	"1.5,3.84,4.81": "IGNF_ANAA92G IGNF_ANAA92 IGNF_ANAA92GEO",
+	"330.91,-13.92,58.56": "IGNF_MARQUI72G IGNF_MARQUI72",
+	"143.6,197.82,74.05": "IGNF_APAT86G IGNF_APAT86 IGNF_TUAM86 IGNF_TUAM86G",
+	"237.17,171.61,-77.84": "IGNF_TUBU69G IGNF_TUBU69",
+	"11.363,424.148,373.13": "IGNF_STPM50G IGNF_STPM50 IGNF_STPM50GEO EPSG_4638",
+	"-208.4058,-109.8777,-2.5764": "EPSG_4754 EPSG_4899 EPSG_4900",
+	"372.87,149.23,585.29": "ESRI_104101",
+	"0,-0.15,0.68": "EPSG_4693",
+	"293.17,726.18,245.36": "EPSG_6207",
+	"-133.63,-157.5,-158.62": "EPSG_4153",
+	"-241.54,-163.64,396.06": "EPSG_4132",
+	"-154.5,150.7,100.4": "EPSG_4221",
+	"-80.7,-132.5,41.1": "EPSG_4266",
+	"-70.9,-151.8,-41.4": "EPSG_4193",
+	"-0.41,0.46,-0.35": "EPSG_5340 EPSG_5341 EPSG_5342",
+	"-294.7,-200.1,525.5": "EPSG_4246",
+	"-3.2,-5.7,2.8": "EPSG_4318",
+	"-199.87,74.79,246.62": "EPSG_4121",
+	"-260.1,5.5,432.2": "EPSG_4223 ESRI_37225 EPSG_4816",
+	"-0.465,372.095,171.736": "EPSG_4158",
+	"-128.16,-282.42,21.93": "EPSG_4285",
+	"-404.78,685.68,45.47": "EPSG_4613 EPSG_4820",
+	"195.671,332.517,274.607": "EPSG_4607",
+	"-381.788,-57.501,-256.673": "EPSG_4475 EPSG_4472 EPSG_4473",
+	"-157.84,308.54,-146.6": "EPSG_4208",
+	"70.995,-335.916,262.898": "EPSG_4743",
+	"-323.65,551.39,-491.22": "EPSG_4710",
+	"-0.077,0.079,0.086": "EPSG_7881 EPSG_7879 EPSG_7880",
+	"283.729,735.942,261.143": "EPSG_4682",
+	"-156,-271,-189": "EPSG_4739",
+	"-80.01,253.26,291.19": "EPSG_4679",
+	"-56.263,16.136,-22.856": "EPSG_4750",
+	"-10.18,-350.43,291.37": "EPSG_4644",
+	"-103.746,-9.614,-255.95": "EPSG_4695",
+	"-355,21,72": "EPSG_4292",
+	"-61.702,284.488,472.052": "EPSG_4302",
+	"-124.76,53,466.79": "EPSG_4143",
+	"-153,153,307": "EPSG_4606",
+	"-770.1,158.4,-498.2": "EPSG_4699",
+	"-273.5,110.6,-357.9": "EPSG_4247",
+	"8.88,184.86,106.69": "EPSG_4160",
+	"-233.43,6.65,173.64": "EPSG_4161",
+	"-9.5,122.9,138.2": "EPSG_9251",
+	"-78.1,101.6,133.3": "EPSG_9253",
+	"-198.383,-240.517,-107.909": "EPSG_4297 EPSG_4810",
+	"-147,506,687": "EPSG_4301",
+	"-59,-11,-52": "EPSG_4618",
+	"44.585,-131.212,-39.544": "EPSG_4678 EPSG_4992 EPSG_4993",
+	"-130,29,364": "EPSG_4250",
+	"214,804,268": "EPSG_4144",
+	"-17.51,-108.32,-62.39": "EPSG_4147",
+	"-254.1,-5.36,-100.29": "EPSG_4259",
+	"-76,-138,67": "EPSG_4164",
+	"-378.873,676.002,-46.255": "EPSG_4211 EPSG_4813",
+	"-422.651,-172.995,84.02": "EPSG_4182",
+	"-143.87,243.37,-33.52": "EPSG_4224",
+	"-205.57,168.77,-4.12": "EPSG_4225",
+	"-67.35,3.88,-38.22": "EPSG_5527",
+	"98,390,-22": "EPSG_4752",
+	"-30,190,89": "EPSG_4310",
+	"-192.26,65.72,132.08": "EPSG_9248",
+	"124.5,-63.5,-281": "EPSG_4680",
+	"-79.9,-158,-168.9": "EPSG_4701",
+	"-146.21,112.63,4.05": "EPSG_4706",
+	"-165,-11,206": "EPSG_4201",
+	"-157,-2,-299": "EPSG_4210",
+	"-104,167,-38": "EPSG_4183",
+	"11,72,-101": "EPSG_4139",
+	"-2,151,181": "EPSG_4717",
+	"102,52,-38": "EPSG_4732",
+	"-377,681,-50": "EPSG_4280",
+	"-138,-105,-289": "EPSG_4209",
+	"31,146,47": "EPSG_4261",
+	"-73,46,-86": "EPSG_4658",
+	"265.025,384.929,-194.046": "EPSG_4721",
+	"-136,-108,-292": "EPSG_4222",
+	"-255,-15,71": "EPSG_4601",
+	"725,685,536": "EPSG_4602",
+	"72,213.7,93": "EPSG_4603",
+	"9,183,236": "EPSG_4605",
+	"137,248,-430": "EPSG_4621",
+	"-28,199,5": "EPSG_4657",
+	"103.25,-100.4,-307.19": "EPSG_4316",
+	"145,-187,103": "EPSG_4698",
+	"-206.1,-174.7,-87.7": "EPSG_4192",
+	"-265,120,-358": "EPSG_4311",
+	"58,-283,-182": "EPSG_4135",
+	"198,-226,-347": "ESRI_104138",
+	"-11,851,5": "EPSG_4245",
+	"-125,53,467": "EPSG_4142",
+	"-106,-87,188": "EPSG_4213",
+	"-133,-77,-51": "EPSG_4253",
+	"-132,-110,-335": "EPSG_4129",
+	"-77,-128,142": "EPSG_4713",
+	"217,823,299": "EPSG_4239",
+	"295,736,257": "EPSG_4146",
+	"-83,37,124": "EPSG_4155",
+	"-173,253,27": "EPSG_4165",
+	"175,-38,113": "EPSG_4672",
+	"-637,-549,-203": "EPSG_4236",
+	"-90,40,88": "EPSG_4251",
+	"-2,374,172": "EPSG_4271",
+	"-88,4,101": "EPSG_4175",
+	"298,-304,-375": "EPSG_4716",
+	"-23,259,-9": "EPSG_4315",
+	"-242.2,-144.9,370.3": "EPSG_4744",
+	"-97,787,86": "EPSG_4244",
+	"616,97,-251": "EPSG_4293",
+	"260,12,-147": "EPSG_4736",
+	"-235,-110,393": "EPSG_6883",
+	"-63,176,185": "EPSG_6894",
+	"-43,-163,45": "EPSG_4205",
+	"41,-220,-134": "EPSG_4256",
+	"639,405,60": "EPSG_4262",
+	"174,359,365": "EPSG_4604",
+	"-115,118,426": "EPSG_4169",
+	"-106,-129,165": "EPSG_4620",
+	"-203,141,53": "EPSG_4184",
+	"-289,-124,60": "EPSG_4616",
+	"-307,-92,127": "EPSG_9403 EPSG_4728",
+	"-133,-321,50": "EPSG_4684",
+	"-491,-22,435": "EPSG_4708",
+	"114,-116,-333": "EPSG_4707",
+	"145,75,-272": "EPSG_4709",
+	"-205,107,53": "EPSG_4712",
+	"124,-234,-25": "EPSG_4711",
+	"230,-199,-752": "EPSG_4718 ESRI_37218",
+	"211,147,111": "EPSG_4719",
+	"208,-435,-229": "EPSG_4724",
+	"189,-79,-202": "EPSG_4725",
+	"647,1777,-1124": "EPSG_4735",
+	"-794,119,-298": "EPSG_4722",
+	"-632,438,-609": "EPSG_4734",
+	"912,-58,1227": "EPSG_4727",
+	"185,165,42": "EPSG_4729",
+	"170,42,84": "EPSG_4730",
+	"276,-57,149": "EPSG_4733",
+	"-7,215,225": "ESRI_37240",
+	"252,-209,-751": "ESRI_37221",
+	"-123,-206,219": "ESRI_4305",
+	"-73,-247,227": "ESRI_104139 EPSG_4304 EPSG_4811",
+	"51,391,-36": "EPSG_4748",
+	"-384,664,-48": "EPSG_4219",
+	"-333,-222,114": "EPSG_4255",
+	"-587.8,519.75,145.76": "EPSG_4257 EPSG_4804",
+	"-963,510,-359": "EPSG_4646",
+	"-24,-203,268": "EPSG_6881",
+	"-183,-15,273": "EPSG_6882",
+	"-104,-129,239": "EPSG_4715",
+	"0,0,0": "IGNF_RGNCG EPSG_7683 IGNF_RGNC IGNF_RGNCGEO IGNF_RGNCGEODD EPSG_7681 EPSG_7682",
+	"589,76,480": "EPSG_4818",
+	"-189.6806,18.3463,-42.7695,-0.33746,-3.09264,2.53861,0.4598": "EPSG_9892 EPSG_9893 EPSG_4181",
+	"-84,-97,-117": "IGNF_ED50 IGNF_ED50GEO IGNF_ED50G",
+	"325,154,172": "EPSG_4637",
+	"253,-132,-127": "EPSG_4639"
+};
+for (var towgs84 in towgs84s) {
+	var keys = towgs84s[towgs84].split(" ");
+	for (var i = 0; i < keys.length; i++) datums[keys[i]] = { towgs84 };
+}
 for (var key in datums) {
 	var datum$1 = datums[key];
 	if (!datum$1.datumName) continue;
@@ -28364,6 +28349,10 @@ function Projection(srsCode, callback) {
 	json.axis = json.axis || "enu";
 	json.ellps = json.ellps || "wgs84";
 	json.lat1 = json.lat1 || json.lat0;
+	json.x0 = json.x0 || 0;
+	json.y0 = json.y0 || 0;
+	json.lat0 = json.lat0 || 0;
+	json.long0 = json.long0 || 0;
 	var sphere_ = sphere(json.a, json.b, json.rf, json.ellps, json.sphere);
 	var ecc = eccentricity(sphere_.a, sphere_.b, sphere_.rf, json.R_A);
 	var nadgrids = getNadgrids(json.nadgrids);
@@ -28455,9 +28444,9 @@ function geocentricToGeodetic(p, es, a, b) {
 			Latitude = HALF_PI;
 			Height = -b;
 			return {
-				x: p.x,
-				y: p.y,
-				z: p.z
+				x: Longitude,
+				y: Latitude,
+				z: Height
 			};
 		}
 	} else Longitude = Math.atan2(Y, X);
@@ -28813,6 +28802,8 @@ function checkCoord(num) {
 function checkNotWGS(source, dest) {
 	return (source.datum.datum_type === 1 || source.datum.datum_type === 2 || source.datum.datum_type === 3) && dest.datumCode !== "WGS84" || (dest.datum.datum_type === 1 || dest.datum.datum_type === 2 || dest.datum.datum_type === 3) && source.datumCode !== "WGS84";
 }
+var wgs84Def;
+var wgs84Proj;
 /**
 * Internal transform: accepts an already-cloned point object, returns transformed point object.
 * @param {import('./defs').ProjectionDefinition} source
@@ -28822,13 +28813,15 @@ function checkNotWGS(source, dest) {
 * @returns {import('./core').InterfaceCoordinates | undefined}
 */
 function transformInternal(source, dest, point, enforceAxis) {
-	var wgs84;
 	var hasZ = point.z !== void 0;
 	checkSanity_default(point);
 	if (source.datum && dest.datum && checkNotWGS(source, dest)) {
-		wgs84 = new Projection("WGS84");
-		point = transformInternal(source, wgs84, point, enforceAxis);
-		source = wgs84;
+		if (!wgs84Proj || wgs84Def !== defs("WGS84")) {
+			wgs84Proj = new Projection("WGS84");
+			wgs84Def = defs("WGS84");
+		}
+		point = transformInternal(source, wgs84Proj, point, enforceAxis);
+		source = wgs84Proj;
 	}
 	if (enforceAxis && source.axis !== "enu") point = adjustAxisToEnu(source, point);
 	if (source.projName === "longlat") point = {
@@ -28870,7 +28863,14 @@ function transformInternal(source, dest, point, enforceAxis) {
 		};
 	}
 	if (enforceAxis && dest.axis !== "enu") return adjustAxisFromEnu(dest, point);
-	if (point && !hasZ && dest.projName !== "geocent") delete point.z;
+	if (point && !hasZ && dest.projName !== "geocent") point = point.m === void 0 ? {
+		x: point.x,
+		y: point.y
+	} : {
+		x: point.x,
+		y: point.y,
+		m: point.m
+	};
 	return point;
 }
 /**
@@ -29134,8 +29134,8 @@ var O = 79;
 var V = 86;
 var Z = 90;
 var mgrs_default = {
-	forward: forward$32,
-	inverse: inverse$32,
+	forward: forward$34,
+	inverse: inverse$34,
 	toPoint
 };
 /**
@@ -29147,7 +29147,7 @@ var mgrs_default = {
 *      100 m, 2 for 1000 m or 1 for 10000 m). Optional, default is 5.
 * @return {string} the MGRS string for the given location and accuracy.
 */
-function forward$32(ll, accuracy) {
+function forward$34(ll, accuracy) {
 	accuracy = accuracy || 5;
 	return encode(LLtoUTM({
 		lat: ll[1],
@@ -29162,7 +29162,7 @@ function forward$32(ll, accuracy) {
 *     (longitude) and top (latitude) values in WGS84, representing the
 *     bounding box for the provided MGRS reference.
 */
-function inverse$32(mgrs) {
+function inverse$34(mgrs) {
 	var bbox = UTMtoLL(decode(mgrs.toUpperCase()));
 	if (bbox.lat && bbox.lon) return [
 		bbox.lon,
@@ -29658,7 +29658,7 @@ Point.fromMGRS = function(mgrsStr) {
 	return new Point(toPoint(mgrsStr));
 };
 Point.prototype.toMGRS = function(accuracy) {
-	return forward$32([this.x, this.y], accuracy);
+	return forward$34([this.x, this.y], accuracy);
 };
 // node_modules/proj4/lib/common/pj_enfn.js
 var C00 = 1;
@@ -29704,7 +29704,7 @@ function pj_inv_mlfn_default(arg, es, en) {
 	}
 	return phi;
 }
-// node_modules/proj4/lib/projections/tmerc.js
+// node_modules/proj4/lib/projections/tmerc_approx.js
 /**
 * @typedef {Object} LocalThis
 * @property {number} es
@@ -29712,11 +29712,7 @@ function pj_inv_mlfn_default(arg, es, en) {
 * @property {number} ml0
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$33() {
-	this.x0 = this.x0 !== void 0 ? this.x0 : 0;
-	this.y0 = this.y0 !== void 0 ? this.y0 : 0;
-	this.long0 = this.long0 !== void 0 ? this.long0 : 0;
-	this.lat0 = this.lat0 !== void 0 ? this.lat0 : 0;
+function init$36() {
 	if (this.es) {
 		this.en = pj_enfn_default(this.es);
 		this.ml0 = pj_mlfn_default(this.lat0, Math.sin(this.lat0), Math.cos(this.lat0), this.en);
@@ -29726,7 +29722,7 @@ function init$33() {
 Transverse Mercator Forward  - long/lat to x/y
 long/lat in radians
 */
-function forward$31(p) {
+function forward$33(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var delta_lon = adjust_lon_default(lon - this.long0, this.over);
@@ -29768,7 +29764,7 @@ function forward$31(p) {
 /**
 Transverse Mercator Inverse  -  x/y to long/lat
 */
-function inverse$31(p) {
+function inverse$33(p) {
 	var con, phi;
 	var lat, lon;
 	var x = (p.x - this.x0) * (1 / this.a);
@@ -29809,10 +29805,10 @@ function inverse$31(p) {
 	p.y = lat;
 	return p;
 }
-var tmerc_default = {
-	init: init$33,
-	forward: forward$31,
-	inverse: inverse$31,
+var tmerc_approx_default = {
+	init: init$36,
+	forward: forward$33,
+	inverse: inverse$33,
 	names: ["Fast_Transverse_Mercator", "Fast Transverse Mercator"]
 };
 // node_modules/proj4/lib/common/sinh.js
@@ -29842,8 +29838,15 @@ function asinhy_default(x) {
 	return x < 0 ? -y : y;
 }
 // node_modules/proj4/lib/common/gatg.js
-function gatg_default(pp, B) {
-	var cos_2B = 2 * Math.cos(2 * B);
+/**
+* @param {Array<number>} pp
+* @param {number} B
+* @param {number} [cos2B] cos(2 * B), if already known
+* @param {number} [sin2B] sin(2 * B), if already known
+* @returns {number}
+*/
+function gatg_default(pp, B, cos2B, sin2B) {
+	var cos_2B = 2 * (cos2B === void 0 ? Math.cos(2 * B) : cos2B);
 	var i = pp.length - 1;
 	var h1 = pp[i];
 	var h2 = 0;
@@ -29853,7 +29856,7 @@ function gatg_default(pp, B) {
 		h2 = h1;
 		h1 = h;
 	}
-	return B + h * Math.sin(2 * B);
+	return B + h * (sin2B === void 0 ? Math.sin(2 * B) : sin2B);
 }
 // node_modules/proj4/lib/common/clens.js
 function clens_default(pp, arg_r) {
@@ -29914,17 +29917,13 @@ function clens_cmplx_default(pp, arg_r, arg_i) {
 * @property {number} Zb
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$32() {
+function init$35() {
 	if (!this.approx && (isNaN(this.es) || this.es <= 0)) throw new Error("Incorrect elliptical usage. Try using the +approx option in the proj string, or PROJECTION[\"Fast_Transverse_Mercator\"] in the WKT.");
 	if (this.approx) {
-		tmerc_default.init.apply(this);
-		this.forward = tmerc_default.forward;
-		this.inverse = tmerc_default.inverse;
+		tmerc_approx_default.init.apply(this);
+		this.forward = tmerc_approx_default.forward;
+		this.inverse = tmerc_approx_default.inverse;
 	}
-	this.x0 = this.x0 !== void 0 ? this.x0 : 0;
-	this.y0 = this.y0 !== void 0 ? this.y0 : 0;
-	this.long0 = this.long0 !== void 0 ? this.long0 : 0;
-	this.lat0 = this.lat0 !== void 0 ? this.lat0 : 0;
 	this.k0 = this.k0 !== void 0 ? this.k0 : 1;
 	this.cgb = [];
 	this.cbg = [];
@@ -29971,7 +29970,7 @@ function init$32() {
 	var Z = gatg_default(this.cbg, this.lat0);
 	this.Zb = -this.Qn * (Z + clens_default(this.gtu, 2 * Z));
 }
-function forward$30(p) {
+function forward$32(p) {
 	var Ce = adjust_lon_default(p.x - this.long0, this.over);
 	var Cn = p.y;
 	Cn = gatg_default(this.cbg, Cn);
@@ -29980,8 +29979,7 @@ function forward$30(p) {
 	var sin_Ce = Math.sin(Ce);
 	var cos_Ce = Math.cos(Ce);
 	Cn = Math.atan2(sin_Cn, cos_Ce * cos_Cn);
-	Ce = Math.atan2(sin_Ce * cos_Cn, hypot_default(sin_Cn, cos_Cn * cos_Ce));
-	Ce = asinhy_default(Math.tan(Ce));
+	Ce = asinhy_default(sin_Ce * cos_Cn / hypot_default(sin_Cn, cos_Cn * cos_Ce));
 	var tmp = clens_cmplx_default(this.gtu, 2 * Cn, 2 * Ce);
 	Cn = Cn + tmp[0];
 	Ce = Ce + tmp[1];
@@ -29998,7 +29996,7 @@ function forward$30(p) {
 	p.y = y;
 	return p;
 }
-function inverse$30(p) {
+function inverse$32(p) {
 	var Ce = (p.x - this.x0) * (1 / this.a);
 	var Cn = (p.y - this.y0) * (1 / this.a);
 	Cn = (Cn - this.Zb) / this.Qn;
@@ -30009,15 +30007,15 @@ function inverse$30(p) {
 		var tmp = clens_cmplx_default(this.utg, 2 * Cn, 2 * Ce);
 		Cn = Cn + tmp[0];
 		Ce = Ce + tmp[1];
-		Ce = Math.atan(sinh_default(Ce));
+		var sinh_Ce = sinh_default(Ce);
 		var sin_Cn = Math.sin(Cn);
 		var cos_Cn = Math.cos(Cn);
-		var sin_Ce = Math.sin(Ce);
-		var cos_Ce = Math.cos(Ce);
-		Cn = Math.atan2(sin_Cn * cos_Ce, hypot_default(sin_Ce, cos_Ce * cos_Cn));
-		Ce = Math.atan2(sin_Ce, cos_Ce * cos_Cn);
+		var h = hypot_default(sinh_Ce, cos_Cn);
+		Ce = Math.atan2(sinh_Ce, cos_Cn);
+		Cn = Math.atan2(sin_Cn, h);
 		lon = adjust_lon_default(Ce + this.long0, this.over);
-		lat = gatg_default(this.cgb, Cn);
+		var r2 = sin_Cn * sin_Cn + h * h;
+		lat = gatg_default(this.cgb, Cn, (h * h - sin_Cn * sin_Cn) / r2, 2 * sin_Cn * h / r2);
 	} else {
 		lon = Infinity;
 		lat = Infinity;
@@ -30027,17 +30025,36 @@ function inverse$30(p) {
 	return p;
 }
 var etmerc_default = {
-	init: init$32,
-	forward: forward$30,
-	inverse: inverse$30,
+	init: init$35,
+	forward: forward$32,
+	inverse: inverse$32,
 	names: [
 		"Extended_Transverse_Mercator",
 		"Extended Transverse Mercator",
-		"etmerc",
+		"etmerc"
+	]
+};
+// node_modules/proj4/lib/projections/tmerc.js
+/** @this {import('../defs.js').ProjectionDefinition & { es: number }} */
+function init$34() {
+	var impl = this.approx || this.es === 0 ? tmerc_approx_default : etmerc_default;
+	impl.init.apply(this);
+	this.forward = impl.forward;
+	this.inverse = impl.inverse;
+	if (/south[\W_]*orientated/i.test(this.projName)) {
+		this.x0 = -this.x0;
+		this.y0 = -this.y0;
+		if (this.axis === "enu") this.axis = "wsu";
+	}
+}
+var tmerc_default = {
+	init: init$34,
+	names: [
 		"Transverse_Mercator",
 		"Transverse Mercator",
 		"Gauss Kruger",
 		"Gauss_Kruger",
+		"Transverse_Mercator_South_Orientated",
 		"tmerc"
 	]
 };
@@ -30053,7 +30070,7 @@ function adjust_zone_default(zone, lon) {
 // node_modules/proj4/lib/projections/utm.js
 var dependsOn = "etmerc";
 /** @this {import('../defs.js').ProjectionDefinition} */
-function init$31() {
+function init$33() {
 	var zone = adjust_zone_default(this.zone, this.long0);
 	if (zone === void 0) throw new Error("unknown utm zone");
 	this.lat0 = 0;
@@ -30066,7 +30083,7 @@ function init$31() {
 	this.inverse = etmerc_default.inverse;
 }
 var utm_default = {
-	init: init$31,
+	init: init$33,
 	names: ["Universal Transverse Mercator System", "utm"],
 	dependsOn
 };
@@ -30087,7 +30104,7 @@ var MAX_ITER$2 = 20;
 * @property {number} es
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$30() {
+function init$32() {
 	var sphi = Math.sin(this.lat0);
 	var cphi = Math.cos(this.lat0);
 	cphi *= cphi;
@@ -30097,14 +30114,14 @@ function init$30() {
 	this.ratexp = .5 * this.C * this.e;
 	this.K = Math.tan(.5 * this.phic0 + FORTPI) / (Math.pow(Math.tan(.5 * this.lat0 + FORTPI), this.C) * srat_default(this.e * sphi, this.ratexp));
 }
-function forward$29(p) {
+function forward$31(p) {
 	var lon = p.x;
 	var lat = p.y;
 	p.y = 2 * Math.atan(this.K * Math.pow(Math.tan(.5 * lat + FORTPI), this.C) * srat_default(this.e * Math.sin(lat), this.ratexp)) - HALF_PI;
 	p.x = this.C * lon;
 	return p;
 }
-function inverse$29(p) {
+function inverse$31(p) {
 	var DEL_TOL = 1e-14;
 	var lon = p.x / this.C;
 	var lat = p.y;
@@ -30120,9 +30137,9 @@ function inverse$29(p) {
 	return p;
 }
 var gauss_default = {
-	init: init$30,
-	forward: forward$29,
-	inverse: inverse$29,
+	init: init$32,
+	forward: forward$31,
+	inverse: inverse$31,
 	names: ["gauss"]
 };
 // node_modules/proj4/lib/projections/sterea.js
@@ -30135,7 +30152,7 @@ var gauss_default = {
 * @property {number} phic0
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$29() {
+function init$31() {
 	gauss_default.init.apply(this);
 	if (!this.rc) return;
 	this.sinc0 = Math.sin(this.phic0);
@@ -30143,7 +30160,7 @@ function init$29() {
 	this.R2 = 2 * this.rc;
 	if (!this.title) this.title = "Oblique Stereographic Alternative";
 }
-function forward$28(p) {
+function forward$30(p) {
 	var sinc, cosc, cosl, k;
 	p.x = adjust_lon_default(p.x - this.long0, this.over);
 	gauss_default.forward.apply(this, [p]);
@@ -30157,7 +30174,7 @@ function forward$28(p) {
 	p.y = this.a * p.y + this.y0;
 	return p;
 }
-function inverse$28(p) {
+function inverse$30(p) {
 	var sinc, cosc, lon, lat, rho;
 	p.x = (p.x - this.x0) / this.a;
 	p.y = (p.y - this.y0) / this.a;
@@ -30180,9 +30197,9 @@ function inverse$28(p) {
 	return p;
 }
 var sterea_default = {
-	init: init$29,
-	forward: forward$28,
-	inverse: inverse$28,
+	init: init$31,
+	forward: forward$30,
+	inverse: inverse$30,
 	names: [
 		"Stereographic_North_Pole",
 		"Oblique_Stereographic",
@@ -30209,11 +30226,7 @@ function ssfn_(phit, sinphi, eccen) {
 	return Math.tan(.5 * (HALF_PI + phit)) * Math.pow((1 - sinphi) / (1 + sinphi), .5 * eccen);
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$28() {
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.lat0 = this.lat0 || 0;
-	this.long0 = this.long0 || 0;
+function init$30() {
 	this.coslat0 = Math.cos(this.lat0);
 	this.sinlat0 = Math.sin(this.lat0);
 	if (this.sphere) {
@@ -30231,7 +30244,7 @@ function init$28() {
 		this.sinX0 = Math.sin(this.X0);
 	}
 }
-function forward$27(p) {
+function forward$29(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var sinlat = Math.sin(lat);
@@ -30269,7 +30282,7 @@ function forward$27(p) {
 	}
 	return p;
 }
-function inverse$27(p) {
+function inverse$29(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
 	var lon, lat, ts, ce, Chi;
@@ -30319,9 +30332,9 @@ function inverse$27(p) {
 	return p;
 }
 var stere_default = {
-	init: init$28,
-	forward: forward$27,
-	inverse: inverse$27,
+	init: init$30,
+	forward: forward$29,
+	inverse: inverse$29,
 	names: [
 		"stere",
 		"Stereographic_South_Pole",
@@ -30341,7 +30354,7 @@ var stere_default = {
 * @property {number} K
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$27() {
+function init$29() {
 	if (!this.k0) this.k0 = 1;
 	var phy0 = this.lat0;
 	this.lambda0 = this.long0;
@@ -30358,7 +30371,7 @@ function init$27() {
 	var k3 = Math.log((1 + e * sinPhy0) / (1 - e * sinPhy0));
 	this.K = k1 - this.alpha * k2 + this.alpha * e / 2 * k3;
 }
-function forward$26(p) {
+function forward$28(p) {
 	var Sa1 = Math.log(Math.tan(Math.PI / 4 - p.y / 2));
 	var Sa2 = this.e / 2 * Math.log((1 + this.e * Math.sin(p.y)) / (1 - this.e * Math.sin(p.y)));
 	var S = -this.alpha * (Sa1 + Sa2) + this.K;
@@ -30370,7 +30383,7 @@ function forward$26(p) {
 	p.x = this.R * rotI + this.x0;
 	return p;
 }
-function inverse$26(p) {
+function inverse$28(p) {
 	var Y = p.x - this.x0;
 	var X = p.y - this.y0;
 	var rotI = Y / this.R;
@@ -30393,9 +30406,9 @@ function inverse$26(p) {
 	return p;
 }
 var somerc_default = {
-	init: init$27,
-	forward: forward$26,
-	inverse: inverse$26,
+	init: init$29,
+	forward: forward$28,
+	inverse: inverse$28,
 	names: ["somerc"]
 };
 // node_modules/proj4/lib/projections/omerc.js
@@ -30435,7 +30448,7 @@ function isTypeA(P) {
 * Initialize the Oblique Mercator  projection
 * @this {import('../defs.js').ProjectionDefinition & LocalThis}
 */
-function init$26() {
+function init$28() {
 	var con, com, cosph0, D, F, H, L, sinph0, p, J, gamma = 0, gamma0, lamc = 0, lam1 = 0, lam2 = 0, phi1 = 0, phi2 = 0, alpha_c = 0;
 	if (!this.k0) this.k0 = 1;
 	this.no_off = isTypeA(this);
@@ -30522,7 +30535,7 @@ function init$26() {
 	this.v_pole_n = this.ArB * Math.log(Math.tan(FORTPI - F));
 	this.v_pole_s = this.ArB * Math.log(Math.tan(FORTPI + F));
 }
-function forward$25(p) {
+function forward$27(p) {
 	var coords = {};
 	var S, T, U, V, W, temp, u, v;
 	p.x = p.x - this.lam0;
@@ -30556,7 +30569,7 @@ function forward$25(p) {
 	if (p.m !== void 0) coords.m = p.m;
 	return coords;
 }
-function inverse$25(p) {
+function inverse$27(p) {
 	var u, v, Qp, Sp, Tp, Vp, Up;
 	var coords = {};
 	p.x = (p.x - this.x0) * (1 / this.a);
@@ -30588,9 +30601,9 @@ function inverse$25(p) {
 	return coords;
 }
 var omerc_default = {
-	init: init$26,
-	forward: forward$25,
-	inverse: inverse$25,
+	init: init$28,
+	forward: forward$27,
+	inverse: inverse$27,
 	names: [
 		"Hotine_Oblique_Mercator",
 		"Hotine Oblique Mercator",
@@ -30612,12 +30625,13 @@ var omerc_default = {
 * @property {number} rh
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$25() {
+function init$27() {
 	if (!this.lat2) this.lat2 = this.lat1;
 	if (!this.k0) this.k0 = 1;
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.long0 = this.long0 || 0;
+	if (/west[\W_]*orientated/i.test(this.projName)) {
+		this.x0 = -this.x0;
+		if (this.axis === "enu") this.axis = "wnu";
+	}
 	if (Math.abs(this.lat1 + this.lat2) < 1e-10) return;
 	var temp = this.b / this.a;
 	this.e = Math.sqrt(1 - temp * temp);
@@ -30637,7 +30651,7 @@ function init$25() {
 	this.rh = Math.abs(Math.abs(this.lat0) - HALF_PI) < 1e-10 ? 0 : this.a * this.f0 * Math.pow(ts0, this.ns);
 	if (!this.title) this.title = "Lambert Conformal Conic";
 }
-function forward$24(p) {
+function forward$26(p) {
 	var lon = p.x;
 	var lat = p.y;
 	if (Math.abs(2 * Math.abs(lat) - Math.PI) <= 1e-10) lat = sign_default(lat) * (HALF_PI - 2 * EPSLN);
@@ -30656,7 +30670,7 @@ function forward$24(p) {
 	p.y = this.k0 * (this.rh - rh1 * Math.cos(theta)) + this.y0;
 	return p;
 }
-function inverse$24(p) {
+function inverse$26(p) {
 	var rh1, con, ts;
 	var lat, lon;
 	var x = (p.x - this.x0) / this.k0;
@@ -30682,9 +30696,9 @@ function inverse$24(p) {
 	return p;
 }
 var lcc_default = {
-	init: init$25,
-	forward: forward$24,
-	inverse: inverse$24,
+	init: init$27,
+	forward: forward$26,
+	inverse: inverse$26,
 	names: [
 		"Lambert Tangential Conformal Conic Projection",
 		"Lambert_Conformal_Conic",
@@ -30692,11 +30706,40 @@ var lcc_default = {
 		"Lambert_Conformal_Conic_2SP",
 		"lcc",
 		"Lambert Conic Conformal (1SP)",
-		"Lambert Conic Conformal (2SP)"
+		"Lambert Conic Conformal (2SP)",
+		"Lambert Conic Conformal (West Orientated)",
+		"Lambert_Conic_Conformal_(West_Orientated)"
 	]
 };
 // node_modules/proj4/lib/projections/krovak.js
-function init$24() {
+var X0 = 1089e3;
+var Y0 = 654e3;
+var C1$1 = .02946529277;
+var C2 = .02515965696;
+var C3 = 1.193845912e-7;
+var C4 = -4.668270147e-7;
+var C5 = 9233980362e-21;
+var C6 = 1523735715e-21;
+var C7 = 1696780024e-27;
+var C8 = 4408314235e-27;
+var C9 = -8331083518e-33;
+var C10 = -3689471323e-33;
+/**
+* @param {number} xr reduced southing in metres
+* @param {number} yr reduced westing in metres
+* @returns {Array<number>} correction to the southing and westing in metres
+*/
+function modKrovakCorrection(xr, yr) {
+	var xr2 = xr * xr;
+	var yr2 = yr * yr;
+	var xr4 = xr2 * xr2;
+	var yr4 = yr2 * yr2;
+	return [C1$1 + C3 * xr - C4 * yr - 2 * C6 * xr * yr + C5 * (xr2 - yr2) + C7 * xr * (xr2 - 3 * yr2) - C8 * yr * (3 * xr2 - yr2) + 4 * C9 * xr * yr * (xr2 - yr2) + C10 * (xr4 + yr4 - 6 * xr2 * yr2), C2 + C3 * yr + C4 * xr + 2 * C5 * xr * yr + C6 * (xr2 - yr2) + C8 * xr * (xr2 - 3 * yr2) + C7 * yr * (3 * xr2 - yr2) - 4 * C10 * xr * yr * (xr2 - yr2) + C9 * (xr4 + yr4 - 6 * xr2 * yr2)];
+}
+/** @this {import('../defs.js').ProjectionDefinition & Record<string, any>} */
+function init$26() {
+	var name = getNormalizedProjName(this.projName).toLowerCase();
+	this.modified = name === "mod_krovak" || name.indexOf("krovak_modified") === 0;
 	this.a = 6377397.155;
 	this.es = .006674372230614;
 	this.e = Math.sqrt(this.es);
@@ -30720,8 +30763,8 @@ function init$24() {
 	this.ro0 = this.k1 * this.n0 / Math.tan(this.s0);
 	this.ad = this.s90 - this.uq;
 }
-function forward$23(p) {
-	var gfi, u, deltav, s, d, eps, ro;
+function forward$25(p) {
+	var gfi, u, deltav, s, d, eps, ro, dxy;
 	var lon = p.x;
 	var lat = p.y;
 	var delta_lon = adjust_lon_default(lon - this.long0, this.over);
@@ -30734,14 +30777,21 @@ function forward$23(p) {
 	ro = this.ro0 * Math.pow(Math.tan(this.s0 / 2 + this.s45), this.n) / Math.pow(Math.tan(s / 2 + this.s45), this.n);
 	p.y = ro * Math.cos(eps) / 1;
 	p.x = ro * Math.sin(eps) / 1;
+	if (this.modified) {
+		dxy = modKrovakCorrection(p.y - X0, p.x - Y0);
+		p.y -= dxy[0];
+		p.x -= dxy[1];
+	}
+	p.y += this.y0;
+	p.x += this.x0;
 	if (!this.czech) {
 		p.y *= -1;
 		p.x *= -1;
 	}
 	return p;
 }
-function inverse$23(p) {
-	var u, deltav, s, d, eps, ro, fi1;
+function inverse$25(p) {
+	var u, deltav, s, d, eps, ro, fi1, dxy;
 	var ok;
 	var tmp = p.x;
 	p.x = p.y;
@@ -30749,6 +30799,13 @@ function inverse$23(p) {
 	if (!this.czech) {
 		p.y *= -1;
 		p.x *= -1;
+	}
+	p.x -= this.y0;
+	p.y -= this.x0;
+	if (this.modified) {
+		dxy = modKrovakCorrection(p.x - X0, p.y - Y0);
+		p.x += dxy[0];
+		p.y += dxy[1];
 	}
 	ro = Math.sqrt(p.x * p.x + p.y * p.y);
 	eps = Math.atan2(p.y, p.x);
@@ -30770,79 +30827,109 @@ function inverse$23(p) {
 	return p;
 }
 var krovak_default = {
-	init: init$24,
-	forward: forward$23,
-	inverse: inverse$23,
+	init: init$26,
+	forward: forward$25,
+	inverse: inverse$25,
 	names: [
 		"Krovak",
 		"Krovak Modified",
 		"Krovak (North Orientated)",
 		"Krovak Modified (North Orientated)",
-		"krovak"
+		"krovak",
+		"mod_krovak"
 	]
 };
-// node_modules/proj4/lib/common/mlfn.js
-function mlfn_default(e0, e1, e2, e3, phi) {
-	return e0 * phi - e1 * Math.sin(2 * phi) + e2 * Math.sin(4 * phi) - e3 * Math.sin(6 * phi);
-}
-// node_modules/proj4/lib/common/e0fn.js
-function e0fn_default(x) {
-	return 1 - .25 * x * (1 + x / 16 * (3 + 1.25 * x));
-}
-// node_modules/proj4/lib/common/e1fn.js
-function e1fn_default(x) {
-	return .375 * x * (1 + .25 * x * (1 + .46875 * x));
-}
-// node_modules/proj4/lib/common/e2fn.js
-function e2fn_default(x) {
-	return .05859375 * x * x * (1 + .75 * x);
-}
-// node_modules/proj4/lib/common/e3fn.js
-function e3fn_default(x) {
-	return x * x * x * (35 / 3072);
-}
-// node_modules/proj4/lib/common/gN.js
-function gN_default(a, e, sinphi) {
-	var temp = e * sinphi;
-	return a / Math.sqrt(1 - temp * temp);
-}
 // node_modules/proj4/lib/common/adjust_lat.js
 function adjust_lat_default(x) {
 	return Math.abs(x) < HALF_PI ? x : x - sign_default(x) * Math.PI;
-}
-// node_modules/proj4/lib/common/imlfn.js
-function imlfn_default(ml, e0, e1, e2, e3) {
-	var phi;
-	var dphi;
-	phi = ml / e0;
-	for (var i = 0; i < 15; i++) {
-		dphi = (ml - (e0 * phi - e1 * Math.sin(2 * phi) + e2 * Math.sin(4 * phi) - e3 * Math.sin(6 * phi))) / (e0 - 2 * e1 * Math.cos(2 * phi) + 4 * e2 * Math.cos(4 * phi) - 6 * e3 * Math.cos(6 * phi));
-		phi += dphi;
-		if (Math.abs(dphi) <= 1e-10) return phi;
-	}
-	return NaN;
 }
 // node_modules/proj4/lib/projections/cass.js
 /**
 * @typedef {Object} LocalThis
 * @property {number} es
-* @property {number} e0
-* @property {number} e1
-* @property {number} e2
-* @property {number} e3
-* @property {number} ml0
+* @property {Array<number>} en
+* @property {number} m0
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$23() {
+function init$25() {
+	this.hyperbolic = Boolean(this.hyperbolic) || getNormalizedProjName(this.projName).toLowerCase() === "hyperbolic_cassini_soldner";
 	if (!this.sphere) {
-		this.e0 = e0fn_default(this.es);
-		this.e1 = e1fn_default(this.es);
-		this.e2 = e2fn_default(this.es);
-		this.e3 = e3fn_default(this.es);
-		this.ml0 = this.a * mlfn_default(this.e0, this.e1, this.e2, this.e3, this.lat0);
+		this.en = pj_enfn_default(this.es);
+		this.m0 = pj_mlfn_default(this.lat0, Math.sin(this.lat0), Math.cos(this.lat0), this.en);
 	}
 }
-function forward$22(p) {
+/**
+* Ellipsoidal forward on a unit semi-major axis, as in PROJ's cass.cpp.
+* @this {import('../defs.js').ProjectionDefinition & LocalThis}
+* @param {number} lam longitude relative to the central meridian
+* @param {number} phi latitude
+* @returns {Array<number>} [x, y]
+*/
+function e_fwd$1(lam, phi) {
+	var es = this.es;
+	var sinphi = Math.sin(phi);
+	var cosphi = Math.cos(phi);
+	var M = pj_mlfn_default(phi, sinphi, cosphi, this.en);
+	var nu = 1 / Math.sqrt(1 - es * sinphi * sinphi);
+	var tanphi = Math.tan(phi);
+	var T = tanphi * tanphi;
+	var A = lam * cosphi;
+	var C = es * cosphi * cosphi / (1 - es);
+	var A2 = A * A;
+	var x = nu * A * (1 - A2 * T * (1 / 6 + (8 - T + 8 * C) * A2 / 120));
+	var y = M - this.m0 + nu * tanphi * A2 * (.5 + (5 - T + 6 * C) * A2 / 24);
+	if (this.hyperbolic) {
+		var rho = nu * nu * nu * (1 - es);
+		y -= y * y * y / (6 * rho * nu);
+	}
+	return [x, y];
+}
+/**
+* Refines an approximate inverse with Newton-Raphson on a numerical Jacobian
+* of the forward, as PROJ's pj_generic_inverse_2d.
+* @see https://github.com/OSGeo/PROJ/blob/9.8.1/src/generic_inverse.cpp
+* @param {function(number, number): Array<number>} fwd
+* @param {number} x
+* @param {number} y
+* @param {number} lam initial longitude
+* @param {number} phi initial latitude
+* @returns {Array<number>|null} [lam, phi], or null if 15 iterations do not converge
+*/
+function generic_inverse_2d(fwd, x, y, lam, phi) {
+	var deriv_lam_X = 0;
+	var deriv_lam_Y = 0;
+	var deriv_phi_X = 0;
+	var deriv_phi_Y = 0;
+	for (var i = 0; i < 15; i++) {
+		var xyApprox = fwd(lam, phi);
+		var deltaX = xyApprox[0] - x;
+		var deltaY = xyApprox[1] - y;
+		if (Math.abs(deltaX) < 1e-12 && Math.abs(deltaY) < 1e-12) return [lam, phi];
+		if (i === 0 || Math.abs(deltaX) > 1e-6 || Math.abs(deltaY) > 1e-6) {
+			var dLam = lam > 0 ? -1e-6 : 1e-6;
+			var xy2 = fwd(lam + dLam, phi);
+			var deriv_X_lam = (xy2[0] - xyApprox[0]) / dLam;
+			var deriv_Y_lam = (xy2[1] - xyApprox[1]) / dLam;
+			var dPhi = phi > 0 ? -1e-6 : 1e-6;
+			xy2 = fwd(lam, phi + dPhi);
+			var deriv_X_phi = (xy2[0] - xyApprox[0]) / dPhi;
+			var deriv_Y_phi = (xy2[1] - xyApprox[1]) / dPhi;
+			var det = deriv_X_lam * deriv_Y_phi - deriv_X_phi * deriv_Y_lam;
+			if (det !== 0) {
+				deriv_lam_X = deriv_Y_phi / det;
+				deriv_lam_Y = -deriv_X_phi / det;
+				deriv_phi_X = -deriv_Y_lam / det;
+				deriv_phi_Y = deriv_X_lam / det;
+			}
+		}
+		lam -= Math.max(Math.min(deltaX * deriv_lam_X + deltaY * deriv_lam_Y, .3), -.3);
+		lam = Math.max(Math.min(lam, Math.PI), -Math.PI);
+		phi -= Math.max(Math.min(deltaX * deriv_phi_X + deltaY * deriv_phi_Y, .3), -.3);
+		phi = Math.max(Math.min(phi, HALF_PI), -HALF_PI);
+	}
+	return null;
+}
+function forward$24(p) {
 	var x, y;
 	var lam = p.x;
 	var phi = p.y;
@@ -30851,22 +30938,15 @@ function forward$22(p) {
 		x = this.a * Math.asin(Math.cos(phi) * Math.sin(lam));
 		y = this.a * (Math.atan2(Math.tan(phi), Math.cos(lam)) - this.lat0);
 	} else {
-		var sinphi = Math.sin(phi);
-		var cosphi = Math.cos(phi);
-		var nl = gN_default(this.a, this.e, sinphi);
-		var tl = Math.tan(phi) * Math.tan(phi);
-		var al = lam * Math.cos(phi);
-		var asq = al * al;
-		var cl = this.es * cosphi * cosphi / (1 - this.es);
-		var ml = this.a * mlfn_default(this.e0, this.e1, this.e2, this.e3, phi);
-		x = nl * al * (1 - asq * tl * (1 / 6 - (8 - tl + 8 * cl) * asq / 120));
-		y = ml - this.ml0 + nl * sinphi / cosphi * asq * (.5 + (5 - tl + 6 * cl) * asq / 24);
+		var xy = e_fwd$1.call(this, lam, phi);
+		x = this.a * xy[0];
+		y = this.a * xy[1];
 	}
 	p.x = x + this.x0;
 	p.y = y + this.y0;
 	return p;
 }
-function inverse$22(p) {
+function inverse$24(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
 	var x = p.x / this.a;
@@ -30877,32 +30957,40 @@ function inverse$22(p) {
 		phi = Math.asin(Math.sin(dd) * Math.cos(x));
 		lam = Math.atan2(Math.tan(x), Math.cos(dd));
 	} else {
-		var phi1 = imlfn_default(this.ml0 / this.a + y, this.e0, this.e1, this.e2, this.e3);
+		var es = this.es;
+		var phi1 = pj_inv_mlfn_default(this.m0 + y, es, this.en);
 		if (Math.abs(Math.abs(phi1) - HALF_PI) <= 1e-10) {
 			p.x = this.long0;
 			p.y = HALF_PI;
 			if (y < 0) p.y *= -1;
 			return p;
 		}
-		var nl1 = gN_default(this.a, this.e, Math.sin(phi1));
-		var rl1 = nl1 * nl1 * nl1 / this.a / this.a * (1 - this.es);
-		var tl1 = Math.pow(Math.tan(phi1), 2);
-		var dl = x * this.a / nl1;
-		var dsq = dl * dl;
-		phi = phi1 - nl1 * Math.tan(phi1) / rl1 * dl * dl * (.5 - (1 + 3 * tl1) * dl * dl / 24);
-		lam = dl * (1 - dsq * (tl1 / 3 + (1 + 3 * tl1) * tl1 * dsq / 15)) / Math.cos(phi1);
+		var tanphi1 = Math.tan(phi1);
+		var T1 = tanphi1 * tanphi1;
+		var sinphi1 = Math.sin(phi1);
+		var nu1 = 1 / Math.sqrt(1 - es * sinphi1 * sinphi1);
+		var rho1 = nu1 * nu1 * nu1 * (1 - es);
+		var D = x / nu1;
+		var D2 = D * D;
+		phi = phi1 - nu1 * tanphi1 / rho1 * D2 * (.5 - (1 + 3 * T1) * D2 / 24);
+		lam = D * (1 - T1 * D2 * (1 / 3 - (1 + 3 * T1) * D2 / 15)) / Math.cos(phi1);
+		var lp = generic_inverse_2d(e_fwd$1.bind(this), x, y, lam, phi);
+		if (!lp) return null;
+		lam = lp[0];
+		phi = lp[1];
 	}
 	p.x = adjust_lon_default(lam + this.long0, this.over);
-	p.y = adjust_lat_default(phi);
+	p.y = this.sphere ? adjust_lat_default(phi) : phi;
 	return p;
 }
 var cass_default = {
-	init: init$23,
-	forward: forward$22,
-	inverse: inverse$22,
+	init: init$25,
+	forward: forward$24,
+	inverse: inverse$24,
 	names: [
 		"Cassini",
 		"Cassini_Soldner",
+		"Hyperbolic_Cassini_Soldner",
 		"cass"
 	]
 };
@@ -30943,7 +31031,7 @@ function authlat(beta, APA) {
 * Initialize the Lambert Azimuthal Equal Area projection
 * @this {import('../defs.js').ProjectionDefinition & LocalThis}
 */
-function init$22() {
+function init$24() {
 	var t = Math.abs(this.lat0);
 	if (Math.abs(t - HALF_PI) < 1e-10) this.mode = this.lat0 < 0 ? 1 : 2;
 	else if (Math.abs(t) < 1e-10) this.mode = 3;
@@ -30980,7 +31068,7 @@ function init$22() {
 		this.cosph0 = Math.cos(this.lat0);
 	}
 }
-function forward$21(p) {
+function forward$23(p) {
 	var x, y, coslam, sinlam, sinphi, q, sinb, cosb, b, cosphi;
 	var lam = p.x;
 	var phi = p.y;
@@ -31050,7 +31138,7 @@ function forward$21(p) {
 	p.y = this.a * y + this.y0;
 	return p;
 }
-function inverse$21(p) {
+function inverse$23(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
 	var x = p.x / this.a;
@@ -31126,9 +31214,9 @@ function inverse$21(p) {
 	return p;
 }
 var laea_default = {
-	init: init$22,
-	forward: forward$21,
-	inverse: inverse$21,
+	init: init$24,
+	forward: forward$23,
+	inverse: inverse$23,
 	names: [
 		"Lambert Azimuthal Equal Area",
 		"Lambert_Azimuthal_Equal_Area",
@@ -31168,7 +31256,7 @@ function asinz_default(x) {
 * @property {number} cos_phi
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$21() {
+function init$23() {
 	if (Math.abs(this.lat1 + this.lat2) < 1e-10) return;
 	this.temp = this.b / this.a;
 	this.es = 1 - Math.pow(this.temp, 2);
@@ -31194,7 +31282,7 @@ function init$21() {
 	this.rh = this.a * Math.sqrt(this.c - this.ns0 * this.qs0) / this.ns0;
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function forward$20(p) {
+function forward$22(p) {
 	var lon = p.x;
 	var lat = p.y;
 	this.sin_phi = Math.sin(lat);
@@ -31208,7 +31296,7 @@ function forward$20(p) {
 	p.y = y;
 	return p;
 }
-function inverse$20(p) {
+function inverse$22(p) {
 	var rh1, qs, con, theta, lon, lat;
 	p.x -= this.x0;
 	p.y = this.rh - p.y + this.y0;
@@ -31249,9 +31337,9 @@ function phi1z(eccent, qs) {
 	return null;
 }
 var aea_default = {
-	init: init$21,
-	forward: forward$20,
-	inverse: inverse$20,
+	init: init$23,
+	forward: forward$22,
+	inverse: inverse$22,
 	names: [
 		"Albers_Conic_Equal_Area",
 		"Albers_Equal_Area",
@@ -31275,13 +31363,13 @@ http://mathworld.wolfram.com/GnomonicProjection.html
 Accessed: 12th November 2009
 @this {import('../defs.js').ProjectionDefinition & LocalThis}
 */
-function init$20() {
+function init$22() {
 	this.sin_p14 = Math.sin(this.lat0);
 	this.cos_p14 = Math.cos(this.lat0);
 	this.infinity_dist = 1e3 * this.a;
 	this.rc = 1;
 }
-function forward$19(p) {
+function forward$21(p) {
 	var sinphi, cosphi;
 	var dlon;
 	var coslon;
@@ -31307,7 +31395,7 @@ function forward$19(p) {
 	p.y = y;
 	return p;
 }
-function inverse$19(p) {
+function inverse$21(p) {
 	var rh;
 	var sinc, cosc;
 	var c;
@@ -31332,9 +31420,9 @@ function inverse$19(p) {
 	return p;
 }
 var gnom_default = {
-	init: init$20,
-	forward: forward$19,
-	inverse: inverse$19,
+	init: init$22,
+	forward: forward$21,
+	inverse: inverse$21,
 	names: ["gnom"]
 };
 // node_modules/proj4/lib/common/iqsfnz.js
@@ -31371,10 +31459,10 @@ A User's Manual" by Gerald I. Evenden,
 USGS Open File Report 90-284and Release 4 Interim Reports (2003)
 @this {import('../defs.js').ProjectionDefinition & LocalThis}
 */
-function init$19() {
+function init$21() {
 	if (!this.sphere) this.k0 = msfnz_default(this.e, Math.sin(this.lat_ts), Math.cos(this.lat_ts));
 }
-function forward$18(p) {
+function forward$20(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var x, y;
@@ -31391,7 +31479,7 @@ function forward$18(p) {
 	p.y = y;
 	return p;
 }
-function inverse$18(p) {
+function inverse$20(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
 	var lon, lat;
@@ -31407,48 +31495,213 @@ function inverse$18(p) {
 	return p;
 }
 var cea_default = {
-	init: init$19,
-	forward: forward$18,
-	inverse: inverse$18,
+	init: init$21,
+	forward: forward$20,
+	inverse: inverse$20,
 	names: ["cea"]
 };
+// node_modules/proj4/lib/projections/labrd.js
+/**
+Original projection implementation:
+https://github.com/OSGeo/PROJ/blob/master/src/projections/labrd.cpp
+
+Documentation:
+https://proj.org/operations/projections/labrd.html
+*/
+/**
+* @typedef {Object} LocalThis
+* @property {string} [azi]
+* @property {number} es
+* @property {number} e
+* @property {number} kRg
+* @property {number} p0s
+* @property {number} A
+* @property {number} C
+* @property {number} Ca
+* @property {number} Cb
+* @property {number} Cc
+* @property {number} Cd
+*/
+/**
+* Initialize the Laborde projection
+* @this {import('../defs.js').ProjectionDefinition & LocalThis}
+*/
+function init$20() {
+	if (!this.lat0) throw new Error("Invalid value for lat_0: lat_0 should be different from 0");
+	if (!this.k0) this.k0 = 1;
+	var az = this.alpha !== void 0 ? this.alpha : (parseFloat(this.azi) || 0) * D2R$1;
+	var sinp = Math.sin(this.lat0);
+	var t = 1 - this.es * sinp * sinp;
+	var N = 1 / Math.sqrt(t);
+	var R = (1 - this.es) * N / t;
+	this.kRg = this.k0 * Math.sqrt(N * R);
+	this.p0s = Math.atan(Math.sqrt(R / N) * Math.tan(this.lat0));
+	this.A = sinp / Math.sin(this.p0s);
+	t = this.e * sinp;
+	this.C = .5 * this.e * this.A * Math.log((1 + t) / (1 - t)) - this.A * Math.log(Math.tan(FORTPI + .5 * this.lat0)) + Math.log(Math.tan(FORTPI + .5 * this.p0s));
+	t = az + az;
+	this.Cb = 1 / (12 * this.kRg * this.kRg);
+	this.Ca = (1 - Math.cos(t)) * this.Cb;
+	this.Cb *= Math.sin(t);
+	this.Cc = 3 * (this.Ca * this.Ca - this.Cb * this.Cb);
+	this.Cd = 6 * this.Ca * this.Cb;
+}
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function forward$19(p) {
+	var lam = adjust_lon_default(p.x - this.long0, this.over);
+	var phi = p.y;
+	var V1 = this.A * Math.log(Math.tan(FORTPI + .5 * phi));
+	var t = this.e * Math.sin(phi);
+	var V2 = .5 * this.e * this.A * Math.log((1 + t) / (1 - t));
+	var ps = 2 * (Math.atan(Math.exp(V1 - V2 + this.C)) - FORTPI);
+	var I1 = ps - this.p0s;
+	var cosps = Math.cos(ps);
+	var cosps2 = cosps * cosps;
+	var sinps = Math.sin(ps);
+	var sinps2 = sinps * sinps;
+	var I4 = this.A * cosps;
+	var I2 = .5 * this.A * I4 * sinps;
+	var I3 = I2 * this.A * this.A * (5 * cosps2 - sinps2) / 12;
+	var I6 = I4 * this.A * this.A;
+	var I5 = I6 * (cosps2 - sinps2) / 6;
+	I6 *= this.A * this.A * (5 * cosps2 * cosps2 + sinps2 * (sinps2 - 18 * cosps2)) / 120;
+	t = lam * lam;
+	var x = this.kRg * lam * (I4 + t * (I5 + t * I6));
+	var y = this.kRg * (I1 + t * (I2 + t * I3));
+	var x2 = x * x;
+	var y2 = y * y;
+	V1 = 3 * x * y2 - x * x2;
+	V2 = y * y2 - 3 * x2 * y;
+	x += this.Ca * V1 + this.Cb * V2;
+	y += this.Ca * V2 - this.Cb * V1;
+	p.x = this.a * x + this.x0;
+	p.y = this.a * y + this.y0;
+	return p;
+}
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function inverse$19(p) {
+	var x = (p.x - this.x0) / this.a;
+	var y = (p.y - this.y0) / this.a;
+	var x2 = x * x;
+	var y2 = y * y;
+	var V1 = 3 * x * y2 - x * x2;
+	var V2 = y * y2 - 3 * x2 * y;
+	var V3 = x * (5 * y2 * y2 + x2 * (-10 * y2 + x2));
+	var V4 = y * (5 * x2 * x2 + y2 * (-10 * x2 + y2));
+	x += -this.Ca * V1 - this.Cb * V2 + this.Cc * V3 + this.Cd * V4;
+	y += this.Cb * V1 - this.Ca * V2 - this.Cd * V3 + this.Cc * V4;
+	var ps = this.p0s + y / this.kRg;
+	var pe = ps + this.lat0 - this.p0s;
+	var t, tpe;
+	for (var i = 20; i; --i) {
+		V1 = this.A * Math.log(Math.tan(FORTPI + .5 * pe));
+		tpe = this.e * Math.sin(pe);
+		V2 = .5 * this.e * this.A * Math.log((1 + tpe) / (1 - tpe));
+		t = ps - 2 * (Math.atan(Math.exp(V1 - V2 + this.C)) - FORTPI);
+		pe += t;
+		if (Math.abs(t) < 1e-10) break;
+	}
+	t = this.e * Math.sin(pe);
+	t = 1 - t * t;
+	var Re = (1 - this.es) / (t * Math.sqrt(t));
+	t = Math.tan(ps);
+	var t2 = t * t;
+	var s = this.kRg * this.kRg;
+	var d = Re * this.k0 * this.kRg;
+	var I7 = t / (2 * d);
+	var I8 = t * (5 + 3 * t2) / (24 * d * s);
+	d = Math.cos(ps) * this.kRg * this.A;
+	var I9 = 1 / d;
+	d *= s;
+	var I10 = (1 + 2 * t2) / (6 * d);
+	var I11 = (5 + t2 * (28 + 24 * t2)) / (120 * d * s);
+	x2 = x * x;
+	p.x = adjust_lon_default(x * (I9 + x2 * (-I10 + x2 * I11)) + this.long0, this.over);
+	p.y = pe + x2 * (-I7 + I8 * x2);
+	return p;
+}
+var labrd_default = {
+	init: init$20,
+	forward: forward$19,
+	inverse: inverse$19,
+	names: ["Laborde_Oblique_Mercator", "labrd"]
+};
 // node_modules/proj4/lib/projections/eqc.js
-function init$18() {
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.lat0 = this.lat0 || 0;
-	this.long0 = this.long0 || 0;
+/**
+* @typedef {Object} LocalThis
+* @property {number} es
+* @property {number} rc
+* @property {Array<number>} en
+* @property {number} ml0
+*/
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function init$19() {
 	this.lat_ts = this.lat_ts || 0;
 	this.title = this.title || "Equidistant Cylindrical (Plate Carre)";
 	this.rc = Math.cos(this.lat_ts);
+	if (this.es) {
+		var sinphi1 = Math.sin(this.lat_ts);
+		var nu1 = 1 / Math.sqrt(1 - this.es * sinphi1 * sinphi1);
+		this.rc *= nu1;
+		this.en = pj_enfn_default(this.es);
+		this.ml0 = pj_mlfn_default(this.lat0, Math.sin(this.lat0), Math.cos(this.lat0), this.en);
+	}
 }
-function forward$17(p) {
+function forward$18(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var dlon = adjust_lon_default(lon - this.long0, this.over);
-	var dlat = adjust_lat_default(lat - this.lat0);
 	p.x = this.x0 + this.a * dlon * this.rc;
-	p.y = this.y0 + this.a * dlat;
+	if (this.es) p.y = this.y0 + this.a * (pj_mlfn_default(lat, Math.sin(lat), Math.cos(lat), this.en) - this.ml0);
+	else p.y = this.y0 + this.a * (lat - this.lat0);
 	return p;
 }
-function inverse$17(p) {
+function inverse$18(p) {
 	var x = p.x;
 	var y = p.y;
 	p.x = adjust_lon_default(this.long0 + (x - this.x0) / (this.a * this.rc), this.over);
-	p.y = adjust_lat_default(this.lat0 + (y - this.y0) / this.a);
+	if (this.es) p.y = pj_inv_mlfn_default((y - this.y0) / this.a + this.ml0, this.es, this.en);
+	else p.y = this.lat0 + (y - this.y0) / this.a;
 	return p;
 }
 var eqc_default = {
-	init: init$18,
-	forward: forward$17,
-	inverse: inverse$17,
+	init: init$19,
+	forward: forward$18,
+	inverse: inverse$18,
 	names: [
 		"Equirectangular",
 		"Equidistant_Cylindrical",
 		"Equidistant_Cylindrical_Spherical",
+		"Equidistant_Cylindrical_Ellipsoidal",
+		"Plate_Carree",
 		"eqc"
 	]
 };
+// node_modules/proj4/lib/common/e0fn.js
+function e0fn_default(x) {
+	return 1 - .25 * x * (1 + x / 16 * (3 + 1.25 * x));
+}
+// node_modules/proj4/lib/common/e1fn.js
+function e1fn_default(x) {
+	return .375 * x * (1 + .25 * x * (1 + .46875 * x));
+}
+// node_modules/proj4/lib/common/e2fn.js
+function e2fn_default(x) {
+	return .05859375 * x * x * (1 + .75 * x);
+}
+// node_modules/proj4/lib/common/e3fn.js
+function e3fn_default(x) {
+	return x * x * x * (35 / 3072);
+}
+// node_modules/proj4/lib/common/mlfn.js
+function mlfn_default(e0, e1, e2, e3, phi) {
+	return e0 * phi - e1 * Math.sin(2 * phi) + e2 * Math.sin(4 * phi) - e3 * Math.sin(6 * phi);
+}
+// node_modules/proj4/lib/common/gN.js
+function gN_default(a, e, sinphi) {
+	var temp = e * sinphi;
+	return a / Math.sqrt(1 - temp * temp);
+}
 // node_modules/proj4/lib/projections/poly.js
 /**
 * @typedef {Object} LocalThis
@@ -31463,7 +31716,7 @@ var eqc_default = {
 */
 var MAX_ITER$1 = 20;
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$17() {
+function init$18() {
 	this.temp = this.b / this.a;
 	this.es = 1 - Math.pow(this.temp, 2);
 	this.e = Math.sqrt(this.es);
@@ -31473,7 +31726,7 @@ function init$17() {
 	this.e3 = e3fn_default(this.es);
 	this.ml0 = this.a * mlfn_default(this.e0, this.e1, this.e2, this.e3, this.lat0);
 }
-function forward$16(p) {
+function forward$17(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var x, y, el;
@@ -31499,7 +31752,7 @@ function forward$16(p) {
 	p.y = y + this.y0;
 	return p;
 }
-function inverse$16(p) {
+function inverse$17(p) {
 	var lon, lat, x, y, i;
 	var al, bl;
 	var phi, dphi;
@@ -31555,16 +31808,16 @@ function inverse$16(p) {
 	return p;
 }
 var poly_default = {
-	init: init$17,
-	forward: forward$16,
-	inverse: inverse$16,
+	init: init$18,
+	forward: forward$17,
+	inverse: inverse$17,
 	names: [
 		"Polyconic",
 		"American_Polyconic",
 		"poly"
 	]
 };
-function init$16() {
+function init$17() {
 	this.A = [];
 	this.A[1] = .6399175073;
 	this.A[2] = -.1358797613;
@@ -31619,7 +31872,7 @@ function init$16() {
 New Zealand Map Grid Forward  - long/lat to x/y
 long/lat in radians
 */
-function forward$15(p) {
+function forward$16(p) {
 	var n;
 	var lon = p.x;
 	var delta_lat = p.y - this.lat0;
@@ -31655,7 +31908,7 @@ function forward$15(p) {
 /**
 New Zealand Map Grid Inverse  -  x/y to long/lat
 */
-function inverse$15(p) {
+function inverse$16(p) {
 	var n;
 	var x = p.x;
 	var y = p.y;
@@ -31721,15 +31974,15 @@ function inverse$15(p) {
 	return p;
 }
 var nzmg_default = {
-	init: init$16,
-	forward: forward$15,
-	inverse: inverse$15,
+	init: init$17,
+	forward: forward$16,
+	inverse: inverse$16,
 	names: ["New_Zealand_Map_Grid", "nzmg"],
 	iterations: 1
 };
 // node_modules/proj4/lib/projections/mill.js
-function init$15() {}
-function forward$14(p) {
+function init$16() {}
+function forward$15(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var dlon = adjust_lon_default(lon - this.long0, this.over);
@@ -31739,7 +31992,7 @@ function forward$14(p) {
 	p.y = y;
 	return p;
 }
-function inverse$14(p) {
+function inverse$15(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
 	var lon = adjust_lon_default(this.long0 + p.x / this.a, this.over);
@@ -31749,9 +32002,9 @@ function inverse$14(p) {
 	return p;
 }
 var mill_default = {
-	init: init$15,
-	forward: forward$14,
-	inverse: inverse$14,
+	init: init$16,
+	forward: forward$15,
+	inverse: inverse$15,
 	names: ["Miller_Cylindrical", "mill"]
 };
 // node_modules/proj4/lib/projections/sinu.js
@@ -31766,8 +32019,7 @@ var MAX_ITER = 20;
 * @property {number} es
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$14() {
-	this.long0 = this.long0 || 0;
+function init$15() {
 	if (!this.sphere) this.en = pj_enfn_default(this.es);
 	else {
 		this.n = 1;
@@ -31777,7 +32029,7 @@ function init$14() {
 		this.C_x = this.C_y / (this.m + 1);
 	}
 }
-function forward$13(p) {
+function forward$14(p) {
 	var x, y;
 	var lon = p.x;
 	var lat = p.y;
@@ -31804,7 +32056,7 @@ function forward$13(p) {
 	p.y = y;
 	return p;
 }
-function inverse$13(p) {
+function inverse$14(p) {
 	var lat, temp, lon, s;
 	p.x -= this.x0;
 	lon = p.x / this.a;
@@ -31812,28 +32064,31 @@ function inverse$13(p) {
 	lat = p.y / this.a;
 	if (this.sphere) {
 		lat /= this.C_y;
+		if (Math.abs(lat) > HALF_PI) lat = sign_default(lat) * HALF_PI;
 		lon = lon / (this.C_x * (this.m + Math.cos(lat)));
 		if (this.m) lat = asinz_default((this.m * lat + Math.sin(lat)) / this.n);
 		else if (this.n !== 1) lat = asinz_default(Math.sin(lat) / this.n);
+		if (!this.over && Math.abs(lon) > Math.PI) lon = sign_default(lon) * Math.PI;
 		lon = adjust_lon_default(lon + this.long0, this.over);
-		lat = adjust_lat_default(lat);
 	} else {
 		lat = pj_inv_mlfn_default(p.y / this.a, this.es, this.en);
+		if (Math.abs(lat) > HALF_PI) lat = sign_default(lat) * HALF_PI;
 		s = Math.abs(lat);
 		if (s < HALF_PI) {
 			s = Math.sin(lat);
-			temp = this.long0 + p.x * Math.sqrt(1 - this.es * s * s) / (this.a * Math.cos(lat));
-			lon = adjust_lon_default(temp, this.over);
-		} else if (s - 1e-10 < HALF_PI) lon = this.long0;
+			temp = p.x * Math.sqrt(1 - this.es * s * s) / (this.a * Math.cos(lat));
+			if (!this.over && Math.abs(temp) > Math.PI) temp = sign_default(temp) * Math.PI;
+			lon = adjust_lon_default(this.long0 + temp, this.over);
+		} else lon = this.long0;
 	}
 	p.x = lon;
 	p.y = lat;
 	return p;
 }
 var sinu_default = {
-	init: init$14,
-	forward: forward$13,
-	inverse: inverse$13,
+	init: init$15,
+	forward: forward$14,
+	inverse: inverse$14,
 	names: ["Sinusoidal", "sinu"]
 };
 // node_modules/proj4/lib/projections/eck6.js
@@ -31849,7 +32104,7 @@ var sinu_default = {
 * @property {number} es
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$13() {
+function init$14() {
 	this.sphere = true;
 	this.b = this.a;
 	this.m = 1;
@@ -31859,19 +32114,14 @@ function init$13() {
 	this.C_x = this.C_y / (this.m + 1);
 }
 var eck6_default = {
-	init: init$13,
-	forward: forward$13,
-	inverse: inverse$13,
+	init: init$14,
+	forward: forward$14,
+	inverse: inverse$14,
 	names: ["Eckert_VI", "eck6"]
 };
 // node_modules/proj4/lib/projections/moll.js
-/** @this {import('../defs.js').ProjectionDefinition} */
-function init$12() {
-	this.x0 = this.x0 !== void 0 ? this.x0 : 0;
-	this.y0 = this.y0 !== void 0 ? this.y0 : 0;
-	this.long0 = this.long0 !== void 0 ? this.long0 : 0;
-}
-function forward$11(p) {
+function init$13() {}
+function forward$12(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var delta_lon = adjust_lon_default(lon - this.long0, this.over);
@@ -31890,17 +32140,17 @@ function forward$11(p) {
 	p.y = y;
 	return p;
 }
-function inverse$11(p) {
+function inverse$12(p) {
 	var theta;
 	var arg;
 	p.x -= this.x0;
 	p.y -= this.y0;
 	arg = p.y / (1.4142135623731 * this.a);
-	if (Math.abs(arg) > .999999999999) arg = .999999999999;
+	if (Math.abs(arg) > .999999999999) arg = sign_default(arg) * .999999999999;
 	theta = Math.asin(arg);
-	var lon = adjust_lon_default(this.long0 + p.x / (.900316316158 * this.a * Math.cos(theta)), this.over);
-	if (lon < -Math.PI) lon = -Math.PI;
-	if (lon > Math.PI) lon = Math.PI;
+	var delta_lon = p.x / (.900316316158 * this.a * Math.cos(theta));
+	if (!this.over && Math.abs(delta_lon) > Math.PI) delta_lon = sign_default(delta_lon) * Math.PI;
+	var lon = adjust_lon_default(this.long0 + delta_lon, this.over);
 	arg = (2 * theta + Math.sin(2 * theta)) / Math.PI;
 	if (Math.abs(arg) > 1) arg = 1;
 	var lat = Math.asin(arg);
@@ -31909,11 +32159,23 @@ function inverse$11(p) {
 	return p;
 }
 var moll_default = {
-	init: init$12,
-	forward: forward$11,
-	inverse: inverse$11,
+	init: init$13,
+	forward: forward$12,
+	inverse: inverse$12,
 	names: ["Mollweide", "moll"]
 };
+// node_modules/proj4/lib/common/imlfn.js
+function imlfn_default(ml, e0, e1, e2, e3) {
+	var phi;
+	var dphi;
+	phi = ml / e0;
+	for (var i = 0; i < 15; i++) {
+		dphi = (ml - (e0 * phi - e1 * Math.sin(2 * phi) + e2 * Math.sin(4 * phi) - e3 * Math.sin(6 * phi))) / (e0 - 2 * e1 * Math.cos(2 * phi) + 4 * e2 * Math.cos(4 * phi) - 6 * e3 * Math.cos(6 * phi));
+		phi += dphi;
+		if (Math.abs(dphi) <= 1e-10) return phi;
+	}
+	return NaN;
+}
 // node_modules/proj4/lib/projections/eqdc.js
 /**
 * @typedef {Object} LocalThis
@@ -31936,7 +32198,7 @@ var moll_default = {
 * @property {number} rh
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$11() {
+function init$12() {
 	if (Math.abs(this.lat1 + this.lat2) < 1e-10) return;
 	this.lat2 = this.lat2 || this.lat1;
 	this.temp = this.b / this.a;
@@ -31962,7 +32224,7 @@ function init$11() {
 	this.ml0 = mlfn_default(this.e0, this.e1, this.e2, this.e3, this.lat0);
 	this.rh = this.a * (this.g - this.ml0);
 }
-function forward$10(p) {
+function forward$11(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var rh1;
@@ -31978,7 +32240,7 @@ function forward$10(p) {
 	p.y = y;
 	return p;
 }
-function inverse$10(p) {
+function inverse$11(p) {
 	p.x -= this.x0;
 	p.y = this.rh - p.y + this.y0;
 	var con, rh1, lat, lon;
@@ -32006,9 +32268,9 @@ function inverse$10(p) {
 	}
 }
 var eqdc_default = {
-	init: init$11,
-	forward: forward$10,
-	inverse: inverse$10,
+	init: init$12,
+	forward: forward$11,
+	inverse: inverse$11,
 	names: ["Equidistant_Conic", "eqdc"]
 };
 // node_modules/proj4/lib/projections/vandg.js
@@ -32020,10 +32282,10 @@ var eqdc_default = {
 * Initialize the Van Der Grinten projection
 * @this {import('../defs.js').ProjectionDefinition & LocalThis}
 */
-function init$10() {
+function init$11() {
 	this.R = this.a;
 }
-function forward$9(p) {
+function forward$10(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var dlon = adjust_lon_default(lon - this.long0, this.over);
@@ -32063,7 +32325,7 @@ function forward$9(p) {
 	p.y = y;
 	return p;
 }
-function inverse$9(p) {
+function inverse$10(p) {
 	var lon, lat;
 	var xx, yy, xys, c1, c2, c3;
 	var a1;
@@ -32077,6 +32339,12 @@ function inverse$9(p) {
 	xx = p.x / con;
 	yy = p.y / con;
 	xys = xx * xx + yy * yy;
+	if (xys > 1) {
+		con = Math.sqrt(xys);
+		xx /= con;
+		yy /= con;
+		xys = 1;
+	}
 	c1 = -Math.abs(yy) * (1 + xys);
 	c2 = c1 - 2 * yy * yy + xx * xx;
 	c3 = -2 * c1 + 1 + 2 * yy * yy + xys * xys;
@@ -32098,9 +32366,9 @@ function inverse$9(p) {
 	return p;
 }
 var vandg_default = {
-	init: init$10,
-	forward: forward$9,
-	inverse: inverse$9,
+	init: init$11,
+	forward: forward$10,
+	inverse: inverse$10,
 	names: [
 		"Van_der_Grinten_I",
 		"VanDerGrinten",
@@ -32217,23 +32485,28 @@ function vincentyDirect(lat1, lon1, azi1, s12, a, f) {
 * @property {number} cos_p12
 * @property {number} a
 * @property {number} f
+* @property {boolean} guam
+* @property {Array<number>} en
+* @property {number} M1
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$9() {
+function init$10() {
 	this.sin_p12 = Math.sin(this.lat0);
 	this.cos_p12 = Math.cos(this.lat0);
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.long0 = this.long0 || 0;
 	this.f = this.es / (1 + Math.sqrt(1 - this.es));
+	this.guam = (this.guam === true || getNormalizedProjName(this.projName).toLowerCase() === "guam_projection") && this.es !== 0;
+	if (this.guam) {
+		this.en = pj_enfn_default(this.es);
+		this.M1 = pj_mlfn_default(this.lat0, this.sin_p12, this.cos_p12, this.en);
+	}
 }
-function forward$8(p) {
+function forward$9(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var sinphi = Math.sin(p.y);
 	var cosphi = Math.cos(p.y);
 	var dlon = adjust_lon_default(lon - this.long0, this.over);
-	var e0, e1, e2, e3, Mlp, Ml, c, kp, cos_c, vars, azi1;
+	var e0, e1, e2, e3, Mlp, Ml, c, kp, cos_c, vars, azi1, t;
 	if (this.sphere) {
 		if (Math.abs(this.sin_p12 - 1) <= 1e-10) {
 			p.x = this.x0 + this.a * (HALF_PI - lat) * Math.sin(dlon);
@@ -32251,6 +32524,11 @@ function forward$8(p) {
 			p.y = this.y0 + this.a * kp * (this.cos_p12 * sinphi - this.sin_p12 * cosphi * Math.cos(dlon));
 			return p;
 		}
+	} else if (this.guam) {
+		t = 1 / Math.sqrt(1 - this.es * sinphi * sinphi);
+		p.x = this.x0 + this.a * dlon * cosphi * t;
+		p.y = this.y0 + this.a * (pj_mlfn_default(lat, sinphi, cosphi, this.en) - this.M1 + .5 * dlon * dlon * cosphi * sinphi * t);
+		return p;
 	} else {
 		e0 = e0fn_default(this.es);
 		e1 = e1fn_default(this.es);
@@ -32282,10 +32560,10 @@ function forward$8(p) {
 		}
 	}
 }
-function inverse$8(p) {
+function inverse$9(p) {
 	p.x -= this.x0;
 	p.y -= this.y0;
-	var rh, z, sinz, cosz, lon, lat, con, e0, e1, e2, e3, Mlp, M, azi1, s12, vars;
+	var rh, z, sinz, cosz, lon, lat, con, e0, e1, e2, e3, Mlp, M, azi1, s12, vars, x, x2, t, i;
 	if (this.sphere) {
 		rh = Math.sqrt(p.x * p.x + p.y * p.y);
 		if (rh > 2 * HALF_PI * this.a) return;
@@ -32303,6 +32581,18 @@ function inverse$8(p) {
 			} else lon = adjust_lon_default(this.long0 + Math.atan2(p.x * sinz, rh * this.cos_p12 * cosz - p.y * this.sin_p12 * sinz), this.over);
 		}
 		p.x = lon;
+		p.y = lat;
+		return p;
+	} else if (this.guam) {
+		x = p.x / this.a;
+		x2 = .5 * x * x;
+		lat = this.lat0;
+		for (i = 0; i < 3; ++i) {
+			t = this.e * Math.sin(lat);
+			t = Math.sqrt(1 - t * t);
+			lat = pj_inv_mlfn_default(this.M1 + p.y / this.a - x2 * Math.tan(lat) * t, this.es, this.en);
+		}
+		p.x = adjust_lon_default(this.long0 + x * t / Math.cos(lat), this.over);
 		p.y = lat;
 		return p;
 	} else {
@@ -32339,28 +32629,51 @@ function inverse$8(p) {
 	}
 }
 var aeqd_default = {
-	init: init$9,
-	forward: forward$8,
-	inverse: inverse$8,
-	names: ["Azimuthal_Equidistant", "aeqd"]
+	init: init$10,
+	forward: forward$9,
+	inverse: inverse$9,
+	names: [
+		"Azimuthal_Equidistant",
+		"Guam_Projection",
+		"aeqd"
+	]
 };
 // node_modules/proj4/lib/projections/ortho.js
+var N_POLE = 1;
+var S_POLE = 2;
+var EQUIT = 3;
+var OBLIQ = 4;
 /**
 * @typedef {Object} LocalThis
 * @property {number} sin_p14
 * @property {number} cos_p14
+* @property {number} sinalpha
+* @property {number} cosalpha
+* @property {number} es
+* @property {number} mode
+* @property {number} nu0
+* @property {number} y_shift
+* @property {number} y_scale
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$8() {
-	this.sin_p14 = Math.sin(this.lat0 || 0);
-	this.cos_p14 = Math.cos(this.lat0 || 0);
+function init$9() {
+	var lat0 = this.lat0 || 0;
+	this.sin_p14 = Math.sin(lat0);
+	this.cos_p14 = Math.cos(lat0);
+	this.sinalpha = Math.sin(this.alpha || 0);
+	this.cosalpha = Math.cos(this.alpha || 0);
+	if (Math.abs(Math.abs(lat0) - HALF_PI) <= 1e-10) this.mode = lat0 < 0 ? S_POLE : N_POLE;
+	else if (Math.abs(lat0) > 1e-10) this.mode = OBLIQ;
+	else this.mode = EQUIT;
+	this.nu0 = 1 / Math.sqrt(1 - this.es * this.sin_p14 * this.sin_p14);
+	this.y_shift = this.es * this.nu0 * this.sin_p14 * this.cos_p14;
+	this.y_scale = 1 / Math.sqrt(1 - this.es * this.cos_p14 * this.cos_p14);
 }
-function forward$7(p) {
+function forward$8(p) {
 	var sinphi, cosphi;
 	var dlon;
 	var coslon;
-	var ksp;
-	var g, x, y;
+	var g, x, y, xp, yp, nu, ak;
 	var lon = p.x;
 	var lat = p.y;
 	dlon = adjust_lon_default(lon - (this.long0 || 0), this.over);
@@ -32368,24 +32681,104 @@ function forward$7(p) {
 	cosphi = Math.cos(lat);
 	coslon = Math.cos(dlon);
 	g = this.sin_p14 * sinphi + this.cos_p14 * cosphi * coslon;
-	ksp = 1;
 	if (g > 0 || Math.abs(g) <= 1e-10) {
-		x = (this.x0 || 0) + this.a * ksp * cosphi * Math.sin(dlon);
-		y = (this.y0 || 0) + this.a * ksp * (this.cos_p14 * sinphi - this.sin_p14 * cosphi * coslon);
+		ak = this.a * this.k0;
+		nu = 1 / Math.sqrt(1 - this.es * sinphi * sinphi);
+		xp = ak * nu * cosphi * Math.sin(dlon);
+		yp = ak * (nu * (sinphi * this.cos_p14 - cosphi * this.sin_p14 * coslon) + this.es * (this.nu0 * this.sin_p14 - nu * sinphi) * this.cos_p14);
+		x = (this.x0 || 0) + this.cosalpha * xp - this.sinalpha * yp;
+		y = (this.y0 || 0) + this.sinalpha * xp + this.cosalpha * yp;
 	}
 	p.x = x;
 	p.y = y;
 	return p;
 }
-function inverse$7(p) {
+function inverse$8(p) {
 	var rh;
 	var z;
 	var sinz, cosz;
 	var con;
 	var lon, lat;
 	var long0, lat0;
-	p.x -= this.x0 || 0;
-	p.y -= this.y0 || 0;
+	var xf, yf, yr, rh2, sinphi2, sinphi, cosphi, sinlam, coslam;
+	var nu, rho, j11, j12, j21, j22, det, dx, dy, dphi, dlam, i;
+	xf = p.x - (this.x0 || 0);
+	yf = p.y - (this.y0 || 0);
+	p.x = (this.cosalpha * xf + this.sinalpha * yf) / this.k0;
+	p.y = (-this.sinalpha * xf + this.cosalpha * yf) / this.k0;
+	if (this.es !== 0) {
+		xf = p.x / this.a;
+		yf = p.y / this.a;
+		if (this.mode === N_POLE || this.mode === S_POLE) {
+			rh2 = xf * xf + yf * yf;
+			if (rh2 >= 1 - 1e-15) {
+				if (rh2 - 1 > 1e-10) return null;
+				lat = 0;
+			} else lat = Math.acos(Math.sqrt(rh2 * (1 - this.es) / (1 - this.es * rh2))) * (this.mode === N_POLE ? 1 : -1);
+			lon = Math.atan2(xf, yf * (this.mode === N_POLE ? -1 : 1));
+		} else if (this.mode === EQUIT) {
+			yr = yf * this.a / this.b;
+			if (xf * xf + yr * yr > 1 + 1e-11) return null;
+			con = (1 - this.es) / yf;
+			sinphi2 = yf === 0 ? 0 : 1 / (con * con + this.es);
+			if (sinphi2 > 1 - 1e-11) {
+				lat = HALF_PI * (yf > 0 ? 1 : -1);
+				lon = 0;
+			} else {
+				lat = Math.asin(Math.sqrt(sinphi2)) * (yf > 0 ? 1 : -1);
+				sinlam = xf * Math.sqrt((1 - this.es * sinphi2) / (1 - sinphi2));
+				lon = Math.abs(sinlam) - 1 > -1e-15 ? HALF_PI * (xf > 0 ? 1 : -1) : Math.asin(sinlam);
+			}
+		} else {
+			yr = (yf - this.y_shift) / this.y_scale;
+			rh2 = xf * xf + yr * yr;
+			if (rh2 > 1 + 1e-11) return null;
+			rh = Math.sqrt(rh2);
+			if (rh <= 1e-10) {
+				lat = this.lat0;
+				lon = 0;
+			} else {
+				sinz = Math.min(rh, 1);
+				cosz = Math.sqrt(1 - sinz * sinz);
+				sinphi = cosz * this.sin_p14 + yr * sinz * this.cos_p14 / rh;
+				lat = asinz_default(sinphi);
+				lon = Math.atan2(xf * sinz * this.cos_p14, (cosz - this.sin_p14 * sinphi) * rh);
+			}
+			for (i = 0; i < 20; i++) {
+				sinphi = Math.sin(lat);
+				cosphi = Math.cos(lat);
+				sinlam = Math.sin(lon);
+				coslam = Math.cos(lon);
+				con = 1 - this.es * sinphi * sinphi;
+				nu = 1 / Math.sqrt(con);
+				rho = (1 - this.es) * nu / con;
+				j11 = -rho * sinphi * sinlam;
+				j12 = nu * cosphi * coslam;
+				j21 = rho * (cosphi * this.cos_p14 + sinphi * this.sin_p14 * coslam);
+				j22 = nu * this.sin_p14 * cosphi * sinlam;
+				det = j11 * j22 - j12 * j21;
+				dx = xf - nu * cosphi * sinlam;
+				dy = yf - (nu * (sinphi * this.cos_p14 - cosphi * this.sin_p14 * coslam) + this.es * (this.nu0 * this.sin_p14 - nu * sinphi) * this.cos_p14);
+				if (Math.abs(dx) < 1e-15 && Math.abs(dy) < 1e-15) break;
+				dphi = (j22 * dx - j12 * dy) / det;
+				dlam = (-j21 * dx + j11 * dy) / det;
+				lat += dphi;
+				if (lat > HALF_PI) {
+					lat = HALF_PI - (lat - HALF_PI);
+					lon = adjust_lon_default(lon + Math.PI);
+				} else if (lat < -HALF_PI) {
+					lat = -HALF_PI + (-HALF_PI - lat);
+					lon = adjust_lon_default(lon + Math.PI);
+				}
+				lon += dlam;
+				if (Math.abs(dphi) < 1e-12 && Math.abs(dlam) < 1e-12) break;
+			}
+			if (i === 20) return null;
+		}
+		p.x = adjust_lon_default(lon + (this.long0 || 0), this.over);
+		p.y = lat;
+		return p;
+	}
 	rh = Math.sqrt(p.x * p.x + p.y * p.y);
 	z = asinz_default(rh / this.a);
 	sinz = Math.sin(z);
@@ -32414,10 +32807,14 @@ function inverse$7(p) {
 	return p;
 }
 var ortho_default = {
-	init: init$8,
-	forward: forward$7,
-	inverse: inverse$7,
-	names: ["ortho"]
+	init: init$9,
+	forward: forward$8,
+	inverse: inverse$8,
+	names: [
+		"Orthographic",
+		"Local_Orthographic",
+		"ortho"
+	]
 };
 // node_modules/proj4/lib/projections/qsc.js
 /**
@@ -32444,11 +32841,7 @@ var AREA_ENUM = {
 	AREA_3: 4
 };
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$7() {
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.lat0 = this.lat0 || 0;
-	this.long0 = this.long0 || 0;
+function init$8() {
 	this.lat_ts = this.lat_ts || 0;
 	this.title = this.title || "Quadrilateralized Spherical Cube";
 	if (this.lat0 >= HALF_PI - FORTPI / 2) this.face = FACE_ENUM.TOP;
@@ -32461,7 +32854,7 @@ function init$7() {
 		this.one_minus_f_squared = this.one_minus_f * this.one_minus_f;
 	}
 }
-function forward$6(p) {
+function forward$7(p) {
 	var xy = {
 		x: 0,
 		y: 0
@@ -32548,7 +32941,7 @@ function forward$6(p) {
 	p.y = xy.y;
 	return p;
 }
-function inverse$6(p) {
+function inverse$7(p) {
 	var lp = {
 		lam: 0,
 		phi: 0
@@ -32674,9 +33067,9 @@ function qsc_shift_lon_origin(lon, offset) {
 	return slon;
 }
 var qsc_default = {
-	init: init$7,
-	forward: forward$6,
-	inverse: inverse$6,
+	init: init$8,
+	forward: forward$7,
+	inverse: inverse$7,
 	names: [
 		"Quadrilateralized Spherical Cube",
 		"Quadrilateralized_Spherical_Cube",
@@ -32936,14 +33329,11 @@ function newton_rapshon(f_df, start, max_err, iters) {
 	}
 	return x;
 }
-function init$6() {
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.long0 = this.long0 || 0;
+function init$7() {
 	this.es = 0;
 	this.title = this.title || "Robinson";
 }
-function forward$5(ll) {
+function forward$6(ll) {
 	var lon = adjust_lon_default(ll.x - this.long0, this.over);
 	var dphi = Math.abs(ll.y);
 	var i = Math.floor(dphi * C1);
@@ -32961,7 +33351,7 @@ function forward$5(ll) {
 	if (ll.m !== void 0) xy.m = ll.m;
 	return xy;
 }
-function inverse$5(xy) {
+function inverse$6(xy) {
 	var ll = {
 		x: (xy.x - this.x0) / (this.a * FXC),
 		y: Math.abs(xy.y - this.y0) / (this.a * FYC)
@@ -32985,31 +33375,32 @@ function inverse$5(xy) {
 		ll.y = (5 * i + t) * D2R$1;
 		if (xy.y < 0) ll.y = -ll.y;
 	}
+	if (!this.over && Math.abs(ll.x) > Math.PI) ll.x = sign_default(ll.x) * Math.PI;
 	ll.x = adjust_lon_default(ll.x + this.long0, this.over);
 	if (xy.z !== void 0) ll.z = xy.z;
 	if (xy.m !== void 0) ll.m = xy.m;
 	return ll;
 }
 var robin_default = {
-	init: init$6,
-	forward: forward$5,
-	inverse: inverse$5,
+	init: init$7,
+	forward: forward$6,
+	inverse: inverse$6,
 	names: ["Robinson", "robin"]
 };
 // node_modules/proj4/lib/projections/geocent.js
-function init$5() {
+function init$6() {
 	this.name = "geocent";
 }
-function forward$4(p) {
+function forward$5(p) {
 	return geodeticToGeocentric(p, this.es, this.a);
 }
-function inverse$4(p) {
+function inverse$5(p) {
 	return geocentricToGeodetic(p, this.es, this.a, this.b);
 }
 var geocent_default = {
-	init: init$5,
-	forward: forward$4,
-	inverse: inverse$4,
+	init: init$6,
+	forward: forward$5,
+	inverse: inverse$5,
 	names: [
 		"Geocentric",
 		"geocentric",
@@ -33068,7 +33459,7 @@ var params = {
 	}
 };
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$4() {
+function init$5() {
 	Object.keys(params).forEach(function(p) {
 		if (typeof this[p] === "undefined") this[p] = params[p].def;
 		else if (params[p].num && isNaN(this[p])) throw new Error("Invalid parameter value, must be numeric " + p + " = " + this[p]);
@@ -33096,7 +33487,7 @@ function init$4() {
 	this.cw = Math.cos(omega);
 	this.sw = Math.sin(omega);
 }
-function forward$3(p) {
+function forward$4(p) {
 	p.x -= this.long0;
 	var sinphi = Math.sin(p.y);
 	var cosphi = Math.cos(p.y);
@@ -33135,7 +33526,7 @@ function forward$3(p) {
 	p.y = y * this.a;
 	return p;
 }
-function inverse$3(p) {
+function inverse$4(p) {
 	p.x /= this.a;
 	p.y /= this.a;
 	var r = {
@@ -33179,9 +33570,9 @@ function inverse$3(p) {
 	return p;
 }
 var tpers_default = {
-	init: init$4,
-	forward: forward$3,
-	inverse: inverse$3,
+	init: init$5,
+	forward: forward$4,
+	inverse: inverse$4,
 	names: ["Tilted_Perspective", "tpers"]
 };
 // node_modules/proj4/lib/projections/geos.js
@@ -33200,7 +33591,7 @@ var tpers_default = {
 * @property {number} es
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$3() {
+function init$4() {
 	this.flip_axis = this.sweep === "x" ? 1 : 0;
 	this.h = Number(this.h);
 	this.radius_g_1 = this.h / this.a;
@@ -33222,7 +33613,7 @@ function init$3() {
 	}
 	if (!this.title) this.title = "Geostationary Satellite View";
 }
-function forward$2(p) {
+function forward$3(p) {
 	var lon = p.x;
 	var lat = p.y;
 	var tmp, v_x, v_y, v_z;
@@ -33264,7 +33655,7 @@ function forward$2(p) {
 	p.y = p.y * this.a;
 	return p;
 }
-function inverse$2(p) {
+function inverse$3(p) {
 	var v_x = -1;
 	var v_y = 0;
 	var v_z = 0;
@@ -33322,9 +33713,9 @@ function inverse$2(p) {
 	return p;
 }
 var geos_default = {
-	init: init$3,
-	forward: forward$2,
-	inverse: inverse$2,
+	init: init$4,
+	forward: forward$3,
+	inverse: inverse$3,
 	names: [
 		"Geostationary Satellite View",
 		"Geostationary_Satellite",
@@ -33374,10 +33765,7 @@ var M = Math.sqrt(3) / 2;
 * @property {number} rqda
 */
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$2() {
-	this.long0 = this.long0 !== void 0 ? this.long0 : 0;
-	this.x0 = this.x0 !== void 0 ? this.x0 : 0;
-	this.y0 = this.y0 !== void 0 ? this.y0 : 0;
+function init$3() {
 	if (this.es !== 0) {
 		this.apa = authset(this.es);
 		this.qp = qsfnz_default(this.e, 1);
@@ -33385,7 +33773,7 @@ function init$2() {
 	}
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function forward$1(p) {
+function forward$2(p) {
 	var lam = adjust_lon_default(p.x - this.long0, this.over);
 	var phi = p.y;
 	var sinphi = Math.sin(phi);
@@ -33402,7 +33790,7 @@ function forward$1(p) {
 	return p;
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function inverse$1(p) {
+function inverse$2(p) {
 	p.x = (p.x - this.x0) / this.a;
 	p.y = (p.y - this.y0) / this.a;
 	if (this.es !== 0) {
@@ -33418,18 +33806,20 @@ function inverse$1(p) {
 		paramLat -= dlat = fy / fpy;
 		if (Math.abs(dlat) < EPS) break;
 	}
+	if (Math.abs(paramLat) > Math.PI / 3) paramLat = sign_default(paramLat) * Math.PI / 3;
 	paramLatSq = paramLat * paramLat;
 	paramLatPow6 = paramLatSq * paramLatSq * paramLatSq;
 	p.x = M * p.x * (A1 + 3 * A2 * paramLatSq + paramLatPow6 * (7 * A3 + 9 * A4 * paramLatSq)) / Math.cos(paramLat);
+	if (!this.over && Math.abs(p.x) > Math.PI) p.x = sign_default(p.x) * Math.PI;
 	p.y = Math.asin(Math.sin(paramLat) / M);
 	if (this.es !== 0) p.y = authlat(p.y, this.apa);
 	p.x = adjust_lon_default(p.x + this.long0, this.over);
 	return p;
 }
 var eqearth_default = {
-	init: init$2,
-	forward: forward$1,
-	inverse: inverse$1,
+	init: init$3,
+	forward: forward$2,
+	inverse: inverse$2,
 	names: [
 		"eqearth",
 		"Equal Earth",
@@ -33448,7 +33838,7 @@ var eqearth_default = {
 */
 var EPS10 = 1e-10;
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init$1() {
+function init$2() {
 	var c;
 	this.phi1 = this.lat1;
 	if (Math.abs(this.phi1) < EPS10) throw new Error();
@@ -33514,7 +33904,7 @@ function s_inv(p) {
 	return p;
 }
 var bonne_default = {
-	init: init$1,
+	init: init$2,
 	names: ["bonne", "Bonne (Werner lat_1=90)"]
 };
 // node_modules/proj4/lib/projections/ob_tran.js
@@ -33599,16 +33989,13 @@ var paramSets = {
 	}
 };
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function init() {
-	this.x0 = this.x0 || 0;
-	this.y0 = this.y0 || 0;
-	this.long0 = this.long0 || 0;
+function init$1() {
 	this.title = this.title || "General Oblique Transformation";
-	this.isIdentity = names$35.includes(this.o_proj);
+	this.isIdentity = names$38.includes(this.o_proj);
 	/** Verify required parameters exist */
 	if (!this.o_proj) throw new Error("Missing parameter: o_proj");
 	if (this.o_proj === `ob_tran`) throw new Error("Invalid value for o_proj: " + this.o_proj);
-	/** @type {import('../defs.js').ProjectionDefinition} */
+	/** @type {import('../defs.js').ProjectionDefinition & import('../core.js').Converter} */
 	const oProj = Projection(this.projStr.replace("+proj=ob_tran", "").replace("+o_proj=", "+proj=").trim());
 	if (!oProj) throw new Error("Invalid parameter: o_proj. Unknown projection " + this.o_proj);
 	oProj.long0 = 0;
@@ -33649,11 +34036,11 @@ function init() {
 	} else this.projectionType = projectionType.TRANSVERSE;
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function forward(p) {
+function forward$1(p) {
 	return this.projectionType.forward(this, p);
 }
 /** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
-function inverse(p) {
+function inverse$1(p) {
 	return this.projectionType.inverse(this, p);
 }
 /**
@@ -33740,7 +34127,9 @@ function inverseOblique(self, lp) {
 		lp.x *= D2R$1;
 		lp.y *= D2R$1;
 	}
-	let { x: lam, y: phi } = self.obliqueProjection.inverse(lp);
+	const innerLp = self.obliqueProjection.inverse(lp);
+	if (!innerLp) return null;
+	let { x: lam, y: phi } = innerLp;
 	if (lam < Number.MAX_VALUE) {
 		lam -= self.lamp;
 		const coslam = Math.cos(lam);
@@ -33762,7 +34151,9 @@ function inverseTransverse(self, lp) {
 		lp.x *= D2R$1;
 		lp.y *= D2R$1;
 	}
-	let { x: lam, y: phi } = self.obliqueProjection.inverse(lp);
+	const innerLp = self.obliqueProjection.inverse(lp);
+	if (!innerLp) return null;
+	let { x: lam, y: phi } = innerLp;
 	if (lam < Number.MAX_VALUE) {
 		const cosphi = Math.cos(phi);
 		lam -= self.lamp;
@@ -33773,18 +34164,80 @@ function inverseTransverse(self, lp) {
 	return lp;
 }
 var ob_tran_default = {
-	init,
-	forward,
-	inverse,
+	init: init$1,
+	forward: forward$1,
+	inverse: inverse$1,
 	names: [
 		"General Oblique Transformation",
 		"General_Oblique_Transformation",
 		"ob_tran"
 	]
 };
+// node_modules/proj4/lib/projections/col_urban.js
+/**
+* Colombia Urban (EPSG method 1052), ported from PROJ's col_urban.cpp.
+* Formulas from IOGP Publication 373-7-2, Geomatics Guidance Note 7 part 2.
+*/
+/**
+* @typedef {Object} LocalThis
+* @property {number} es
+* @property {number} A
+* @property {number} B
+* @property {number} C
+* @property {number} D
+* @property {number} rho0
+* @property {number} h
+*/
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function init() {
+	this.h = this.h || 0;
+	var h0 = this.h / this.a;
+	var sinphi0 = Math.sin(this.lat0);
+	var nu0 = 1 / Math.sqrt(1 - this.es * sinphi0 * sinphi0);
+	this.A = 1 + h0 / nu0;
+	this.rho0 = (1 - this.es) / Math.pow(1 - this.es * sinphi0 * sinphi0, 1.5);
+	this.B = Math.tan(this.lat0) / (2 * this.rho0 * nu0);
+	this.C = 1 + h0;
+	this.D = this.rho0 * (1 + h0 / (1 - this.es));
+}
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function forward(p) {
+	var lam = adjust_lon_default(p.x - this.long0, this.over);
+	var phi = p.y;
+	var sinphi = Math.sin(phi);
+	var lamNuCosphi = lam * (1 / Math.sqrt(1 - this.es * sinphi * sinphi)) * Math.cos(phi);
+	var sinphim = Math.sin(.5 * (phi + this.lat0));
+	var rhom = (1 - this.es) / Math.pow(1 - this.es * sinphim * sinphim, 1.5);
+	var g = 1 + this.h / (this.a * rhom);
+	p.x = this.a * this.A * lamNuCosphi + this.x0;
+	p.y = this.a * g * this.rho0 * (phi - this.lat0 + this.B * lamNuCosphi * lamNuCosphi) + this.y0;
+	return p;
+}
+/** @this {import('../defs.js').ProjectionDefinition & LocalThis} */
+function inverse(p) {
+	var x = (p.x - this.x0) / this.a;
+	var y = (p.y - this.y0) / this.a;
+	var phi = this.lat0 + y / this.D - this.B * (x / this.C) * (x / this.C);
+	var sinphi = Math.sin(phi);
+	var nu = 1 / Math.sqrt(1 - this.es * sinphi * sinphi);
+	p.x = adjust_lon_default(x / (this.C * nu * Math.cos(phi)) + this.long0, this.over);
+	p.y = phi;
+	return p;
+}
+var col_urban_default = {
+	init,
+	forward,
+	inverse,
+	names: [
+		"Colombia Urban",
+		"IGAC_Plano_Cartesiano",
+		"col_urban"
+	]
+};
 // node_modules/proj4/projs.js
 function projs_default(proj4) {
 	proj4.Proj.projections.add(tmerc_default);
+	proj4.Proj.projections.add(tmerc_approx_default);
 	proj4.Proj.projections.add(etmerc_default);
 	proj4.Proj.projections.add(utm_default);
 	proj4.Proj.projections.add(sterea_default);
@@ -33798,6 +34251,7 @@ function projs_default(proj4) {
 	proj4.Proj.projections.add(aea_default);
 	proj4.Proj.projections.add(gnom_default);
 	proj4.Proj.projections.add(cea_default);
+	proj4.Proj.projections.add(labrd_default);
 	proj4.Proj.projections.add(eqc_default);
 	proj4.Proj.projections.add(poly_default);
 	proj4.Proj.projections.add(nzmg_default);
@@ -33817,6 +34271,7 @@ function projs_default(proj4) {
 	proj4.Proj.projections.add(eqearth_default);
 	proj4.Proj.projections.add(bonne_default);
 	proj4.Proj.projections.add(ob_tran_default);
+	proj4.Proj.projections.add(col_urban_default);
 }
 // node_modules/proj4/lib/index.js
 /**

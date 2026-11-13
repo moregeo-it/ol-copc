@@ -18,12 +18,11 @@
     "url": "https://github.com/sponsors/m-mohr"
   },
   "dependencies": {
-    "copc": "^0.0.9",
-    "wkt-parser": "^1.7.0"
+    "copc": "^0.0.9"
   },
   "peerDependencies": {
     "ol": ">=9.0.0",
-    "proj4": "^2.16.1"
+    "proj4": "^2.23.0"
   },
   "browserslist": [
     "> 1%",
